@@ -21,8 +21,11 @@ const useAuthStore = create((set) => ({
   },
 
   logout: async () => {
-    await authApi.logout()
-    set({ user: null })
+    try {
+      await authApi.logout()
+    } finally {
+      set({ user: null })
+    }
   },
 }))
 
