@@ -9,14 +9,22 @@ const useTripStore = create((set) => ({
 
   fetchTrips: async (status) => {
     set({ loading: true })
-    const res = await api.getTrips(status)
-    set({ trips: res.data.data, loading: false })
+    try {
+      const res = await api.getTrips(status)
+      set({ trips: res.data.data, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   fetchTrip: async (tripId) => {
     set({ loading: true })
-    const res = await api.getTrip(tripId)
-    set({ currentTrip: res.data.data, loading: false })
+    try {
+      const res = await api.getTrip(tripId)
+      set({ currentTrip: res.data.data, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   createTrip: async (data) => {
@@ -49,8 +57,12 @@ const useTripStore = create((set) => ({
   },
 
   fetchLogs: async (tripId) => {
-    const res = await api.getTripLogs(tripId)
-    set({ logs: res.data.data })
+    try {
+      const res = await api.getTripLogs(tripId)
+      set({ logs: res.data.data })
+    } catch {
+      // no-op
+    }
   },
 }))
 

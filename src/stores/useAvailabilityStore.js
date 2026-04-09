@@ -17,9 +17,14 @@ const useAvailabilityStore = create((set) => ({
 
   save: async (year, month, dates) => {
     set({ loading: true })
-    const res = await api.saveMyAvailability(year, month, dates)
-    set({ data: res.data.data, loading: false })
-    return res.data.data
+    try {
+      const res = await api.saveMyAvailability(year, month, dates)
+      set({ data: res.data.data, loading: false })
+      return res.data.data
+    } catch (e) {
+      set({ loading: false })
+      throw e
+    }
   },
 }))
 

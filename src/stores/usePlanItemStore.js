@@ -7,8 +7,12 @@ const usePlanItemStore = create((set) => ({
 
   fetchItems: async (tripId, category) => {
     set({ loading: true })
-    const res = await api.getPlanItems(tripId, category)
-    set({ items: res.data.data, loading: false })
+    try {
+      const res = await api.getPlanItems(tripId, category)
+      set({ items: res.data.data, loading: false })
+    } catch {
+      set({ loading: false })
+    }
   },
 
   createItem: async (tripId, data) => {
