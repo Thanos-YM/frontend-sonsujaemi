@@ -1,8 +1,9 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { ChevronLeft, ChevronRight, Save, Lock } from 'lucide-react'
 import useAvailabilityStore from '../stores/useAvailabilityStore'
 import useAuthStore from '../stores/useAuthStore'
 import useTripStore from '../stores/useTripStore'
+import { getTrips } from '../api/trips'
 import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
 
@@ -35,10 +36,27 @@ export default function AvailabilityPage() {
   const { user } = useAuthStore()
   const { createTrip } = useTripStore()
   const isAdmin = user?.role === 'ADMIN'
+  const [confirmedTrips, setConfirmedTrips] = useState([])
+
+  const fetchConfirmedTrips = useCallback(async () => {
+    try {
+      const [upcomingRes, completedRes] = await Promise.all([
+        getTrips('UPCOMING'),
+        getTrips('COMPLETED'),
+      ])
+      setConfirmedTrips([
+        ...(upcomingRes.data.data || []),
+        ...(completedRes.data.data || []),
+      ])
+    } catch {
+      // no-op
+    }
+  }, [])
 
   useEffect(() => {
     fetch(year, month)
-  }, [year, month, fetch])
+    fetchConfirmedTrips()
+  }, [year, month, fetch, fetchConfirmedTrips])
 
   useEffect(() => {
     if (!data) return
@@ -61,8 +79,21 @@ export default function AvailabilityPage() {
   }, [data])
 
   const confirmedDates = useMemo(() => {
-    return new Set()
-  }, [])
+    const dates = new Set()
+    confirmedTrips.forEach((trip) => {
+      const start = new Date(trip.startDate + 'T00:00:00')
+      const end = new Date(trip.endDate + 'T00:00:00')
+      const current = new Date(start)
+      while (current <= end) {
+        const y = current.getFullYear()
+        const m = String(current.getMonth() + 1).padStart(2, '0')
+        const d = String(current.getDate()).padStart(2, '0')
+        dates.add(`${y}-${m}-${d}`)
+        current.setDate(current.getDate() + 1)
+      }
+    })
+    return dates
+  }, [confirmedTrips])
 
   const { firstDay, daysInMonth } = getDaysInMonth(year, month)
 
@@ -126,7 +157,8 @@ export default function AvailabilityPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      await save(year, month, [...selectedDates])
+      const datesToSave = [...selectedDates].filter((d) => !confirmedDates.has(d))
+      await save(year, month, datesToSave)
       setDirty(false)
     } catch (err) {
       alert(err.response?.data?.message || '저장 실패')
@@ -150,6 +182,7 @@ export default function AvailabilityPage() {
       setTripTitle('')
       setTripRegion('')
       fetch(year, month)
+      fetchConfirmedTrips()
       alert('여행이 생성되었습니다!')
     } catch (err) {
       alert(err.response?.data?.message || '여행 생성 실패')
@@ -252,10 +285,13 @@ export default function AvailabilityPage() {
                 onClick={() => toggleDate(day)}
                 className={`relative aspect-square rounded-lg border text-sm font-medium transition-all ${getCellStyle(day)}`}
               >
-                <span className={`${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) ? '!text-inherit' : ''}`}>
+                <span className={`${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''}`}>
                   {day}
                 </span>
-                {info && info.count > 0 && !fixMode && (
+                {confirmedDates.has(dateStr) && (
+                  <Lock size={10} className="absolute top-0.5 right-0.5 text-emerald-500" />
+                )}
+                {info && info.count > 0 && !fixMode && !confirmedDates.has(dateStr) && (
                   <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-px">
                     {info.availableUsers.slice(0, 5).map((u) => (
                       <div
