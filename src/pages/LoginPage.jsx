@@ -33,7 +33,7 @@ export default function LoginPage() {
             <span className="text-3xl">✈️</span>
           </div>
           <h1 className="text-2xl font-bold text-gray-900">손수재미</h1>
-          <p className="text-sm text-gray-500 mt-1">1박2일 여행 관리</p>
+          <p className="text-sm text-gray-500 mt-1">일정관리</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
