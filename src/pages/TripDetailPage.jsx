@@ -1,6 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin, Calendar, Clock, Edit2, X, Check, Ban, CheckCircle } from 'lucide-react'
+import { ArrowLeft, MapPin, Calendar, Clock, Edit2, X, Check, Ban, CheckCircle, GripVertical } from 'lucide-react'
+import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { SortableContext, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
 import useTripStore from '../stores/useTripStore'
 import usePlanItemStore from '../stores/usePlanItemStore'
 import useAuthStore from '../stores/useAuthStore'
@@ -21,13 +24,27 @@ const ITEM_STATUS = {
   CANCELLED: { label: '취소', color: 'bg-red-100 text-red-700' },
 }
 
+function SortableItem({ id, children }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const style = { transform: CSS.Transform.toString(transform), transition, opacity: isDragging ? 0.5 : 1 }
+  return (
+    <div ref={setNodeRef} style={style} className="flex items-center gap-1">
+      <button {...attributes} {...listeners} className="p-1 cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-500 shrink-0 touch-none">
+        <GripVertical size={14} />
+      </button>
+      <div className="flex-1 min-w-0">{children}</div>
+    </div>
+  )
+}
+
 export default function TripDetailPage() {
   const { tripId } = useParams()
   const navigate = useNavigate()
   const { user } = useAuthStore()
   const { currentTrip: trip, fetchTrip, updateTrip, updateGatherInfo, cancelTrip, completeTrip, logs, fetchLogs } = useTripStore()
-  const { items, fetchItems, createItem, changeStatus, deleteItem } = usePlanItemStore()
+  const { items, fetchItems, createItem, updateItem, changeStatus, deleteItem, reorderItems } = usePlanItemStore()
   const isAdmin = user?.role === 'ADMIN'
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }))
 
   const [category, setCategory] = useState(null)
   const [editInfo, setEditInfo] = useState(false)
@@ -36,10 +53,12 @@ export default function TripDetailPage() {
   const [showCancel, setShowCancel] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [editItem, setEditItem] = useState(null)
+  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '' })
 
   const [infoForm, setInfoForm] = useState({ title: '', region: '' })
   const [gatherForm, setGatherForm] = useState({ gatherPlace: '', gatherTime: '', gatherNote: '' })
-  const [itemForm, setItemForm] = useState({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '' })
+  const [itemForm, setItemForm] = useState({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '' })
 
   useEffect(() => { fetchTrip(tripId) }, [tripId, fetchTrip])
   useEffect(() => { fetchItems(tripId, category) }, [tripId, category, fetchItems])
@@ -79,15 +98,65 @@ export default function TripDetailPage() {
     if (!itemForm.placeName.trim() || submitting) return
     setSubmitting(true)
     try {
-      await createItem(tripId, itemForm)
+      const payload = {
+        ...itemForm,
+        price: itemForm.price ? Number(itemForm.price) : null,
+        nights: itemForm.nights ? Number(itemForm.nights) : null,
+        menuItems: itemForm.menuItems || null,
+      }
+      await createItem(tripId, payload)
       setShowAddItem(false)
-      setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '' })
+      setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '' })
       fetchLogs(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '추가 실패')
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const openEditItem = (item) => {
+    setEditItem(item)
+    setEditItemForm({
+      note: item.note || '',
+      externalLink: item.externalLink || '',
+      price: item.price ?? '',
+      menuItems: item.menuItems || '',
+      nights: item.nights ?? '',
+    })
+  }
+
+  const handleEditItem = async () => {
+    if (!editItem || submitting) return
+    setSubmitting(true)
+    try {
+      const payload = {
+        note: editItemForm.note || null,
+        externalLink: editItemForm.externalLink || null,
+        price: editItemForm.price !== '' ? Number(editItemForm.price) : null,
+        menuItems: editItemForm.menuItems || null,
+        nights: editItemForm.nights !== '' ? Number(editItemForm.nights) : null,
+      }
+      await updateItem(tripId, editItem.id, payload)
+      setEditItem(null)
+      fetchLogs(tripId)
+    } catch (err) {
+      alert(err.response?.data?.message || '수정 실패')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event
+    if (!over || active.id === over.id) return
+    const oldIndex = items.findIndex((i) => i.id === active.id)
+    const newIndex = items.findIndex((i) => i.id === over.id)
+    if (oldIndex === -1 || newIndex === -1) return
+    const reordered = [...items]
+    const [moved] = reordered.splice(oldIndex, 1)
+    reordered.splice(newIndex, 0, moved)
+    reorderItems(tripId, reordered)
   }
 
   const handleCancel = async () => {
@@ -202,41 +271,55 @@ export default function TripDetailPage() {
         {items.length === 0 ? (
           <p className="text-sm text-gray-400 py-4 text-center">등록된 항목이 없습니다.</p>
         ) : (
-          <div className="space-y-2">
-            {items.map((item) => {
-              const st = ITEM_STATUS[item.status]
-              return (
-                <div key={item.id} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
-                      <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${st.color}`}>{st.label}</span>
-                      <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
-                    </div>
-                    {item.note && <p className="text-xs text-gray-500">{item.note}</p>}
-                    {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline">링크</a>}
-                  </div>
-                  {isUpcoming && item.status !== 'CANCELLED' && (
-                    <div className="flex gap-1">
-                      <select
-                        value={item.status}
-                        onChange={async (e) => { await changeStatus(tripId, item.id, e.target.value); fetchLogs(tripId) }}
-                        className="text-xs border border-gray-200 rounded px-1.5 py-1"
-                      >
-                        <option value="CANDIDATE">후보</option>
-                        <option value="CONFIRMED">확정</option>
-                        <option value="RESERVED">예약완료</option>
-                        <option value="CANCELLED">취소</option>
-                      </select>
-                      {item.isDeletable !== false && !item.hasBeenConfirmedOrReserved && item.status === 'CANDIDATE' && (
-                        <button onClick={async () => { await deleteItem(tripId, item.id); fetchLogs(tripId) }} className="text-xs text-red-400 hover:text-red-600 px-1">삭제</button>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={items.map((i) => i.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-2">
+                {items.map((item) => {
+                  const st = ITEM_STATUS[item.status]
+                  return (
+                    <SortableItem key={item.id} id={item.id}>
+                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${st.color}`}>{st.label}</span>
+                            <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                            {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
+                            {item.menuItems && <span className="text-xs text-gray-500">{item.menuItems}</span>}
+                            {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
+                          </div>
+                          {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
+                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline">링크</a>}
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          {isUpcoming && item.status !== 'CANCELLED' && (
+                            <select
+                              value={item.status}
+                              onChange={async (e) => { await changeStatus(tripId, item.id, e.target.value); fetchLogs(tripId) }}
+                              className="text-xs border border-gray-200 rounded px-1.5 py-1"
+                            >
+                              <option value="CANDIDATE">후보</option>
+                              <option value="CONFIRMED">확정</option>
+                              <option value="RESERVED">예약완료</option>
+                              <option value="CANCELLED">취소</option>
+                            </select>
+                          )}
+                          {item.status !== 'CANCELLED' && (
+                            <>
+                              <button onClick={() => openEditItem(item)} className="text-xs text-indigo-500 hover:text-indigo-700 px-1">수정</button>
+                              <button onClick={async () => { if (confirm('이 항목을 삭제하시겠습니까?')) { await deleteItem(tripId, item.id); fetchLogs(tripId) } }} className="text-xs text-red-400 hover:text-red-600 px-1">삭제</button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </SortableItem>
+                  )
+                })}
+              </div>
+            </SortableContext>
+          </DndContext>
         )}
       </div>
 
@@ -290,6 +373,22 @@ export default function TripDetailPage() {
             <input value={itemForm.address} onChange={(e) => setItemForm({ ...itemForm, address: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
+            <input type="number" value={itemForm.price} onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="원" />
+          </div>
+          {itemForm.category === 'FOOD' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+              <textarea value={itemForm.menuItems} onChange={(e) => setItemForm({ ...itemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+            </div>
+          )}
+          {itemForm.category === 'ACCOMMODATION' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">숙박 일수</label>
+              <input type="number" min="1" value={itemForm.nights} onChange={(e) => setItemForm({ ...itemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
+            </div>
+          )}
+          <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
             <input value={itemForm.note} onChange={(e) => setItemForm({ ...itemForm, note: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
@@ -299,6 +398,43 @@ export default function TripDetailPage() {
           </div>
           <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
         </div>
+      </Modal>
+
+      {/* 항목 수정 모달 */}
+      <Modal open={!!editItem} onClose={() => setEditItem(null)} title="계획 항목 수정">
+        {editItem && (
+          <div className="space-y-3">
+            <div className="px-3 py-2 bg-gray-50 rounded-lg">
+              <span className="text-sm font-medium text-gray-700">{editItem.place.name}</span>
+              <span className="text-xs text-gray-400 ml-2">{editItem.place.categoryDisplayName}</span>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
+              <input type="number" value={editItemForm.price} onChange={(e) => setEditItemForm({ ...editItemForm, price: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="원" />
+            </div>
+            {editItem.place.category === 'FOOD' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+              </div>
+            )}
+            {editItem.place.category === 'ACCOMMODATION' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">숙박 일수</label>
+                <input type="number" min="1" value={editItemForm.nights} onChange={(e) => setEditItemForm({ ...editItemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
+              </div>
+            )}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
+              <input value={editItemForm.note} onChange={(e) => setEditItemForm({ ...editItemForm, note: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
+              <input value={editItemForm.externalLink} onChange={(e) => setEditItemForm({ ...editItemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            </div>
+            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
+          </div>
+        )}
       </Modal>
 
       {/* 취소 모달 */}

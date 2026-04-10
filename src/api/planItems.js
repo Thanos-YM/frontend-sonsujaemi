@@ -17,6 +17,9 @@ export const changePlanItemStatus = (tripId, itemId, status) =>
 export const deletePlanItem = (tripId, itemId) =>
   client.delete(`/trips/${tripId}/plan-items/${itemId}`)
 
+export const reorderPlanItems = (tripId, itemIds) =>
+  client.patch(`/trips/${tripId}/plan-items/reorder`, itemIds)
+
 export const getVisitReviews = (planItemId) =>
   client.get(`/plan-items/${planItemId}/reviews`)
 

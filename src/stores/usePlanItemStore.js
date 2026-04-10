@@ -41,6 +41,11 @@ const usePlanItemStore = create((set) => ({
     await api.deletePlanItem(tripId, itemId)
     set((state) => ({ items: state.items.filter((i) => i.id !== itemId) }))
   },
+
+  reorderItems: async (tripId, reorderedItems) => {
+    set({ items: reorderedItems })
+    await api.reorderPlanItems(tripId, reorderedItems.map((i) => i.id))
+  },
 }))
 
 export default usePlanItemStore
