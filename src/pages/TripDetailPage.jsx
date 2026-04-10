@@ -35,6 +35,7 @@ export default function TripDetailPage() {
   const [showAddItem, setShowAddItem] = useState(false)
   const [showCancel, setShowCancel] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   const [infoForm, setInfoForm] = useState({ title: '', region: '' })
   const [gatherForm, setGatherForm] = useState({ gatherPlace: '', gatherTime: '', gatherNote: '' })
@@ -62,6 +63,7 @@ export default function TripDetailPage() {
   const handleSaveInfo = async () => {
     await updateTrip(tripId, infoForm)
     setEditInfo(false)
+    fetchLogs(tripId)
   }
 
   const handleSaveGather = async () => {
@@ -70,16 +72,21 @@ export default function TripDetailPage() {
       gatherTime: gatherForm.gatherTime || null,
     })
     setEditGather(false)
+    fetchLogs(tripId)
   }
 
   const handleAddItem = async () => {
-    if (!itemForm.placeName.trim()) return
+    if (!itemForm.placeName.trim() || submitting) return
+    setSubmitting(true)
     try {
       await createItem(tripId, itemForm)
       setShowAddItem(false)
       setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '' })
+      fetchLogs(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '추가 실패')
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -89,6 +96,7 @@ export default function TripDetailPage() {
       await cancelTrip(tripId, cancelReason)
       setShowCancel(false)
       setCancelReason('')
+      fetchLogs(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '취소 실패')
     }
@@ -212,7 +220,7 @@ export default function TripDetailPage() {
                     <div className="flex gap-1">
                       <select
                         value={item.status}
-                        onChange={(e) => changeStatus(tripId, item.id, e.target.value)}
+                        onChange={async (e) => { await changeStatus(tripId, item.id, e.target.value); fetchLogs(tripId) }}
                         className="text-xs border border-gray-200 rounded px-1.5 py-1"
                       >
                         <option value="CANDIDATE">후보</option>
@@ -221,7 +229,7 @@ export default function TripDetailPage() {
                         <option value="CANCELLED">취소</option>
                       </select>
                       {item.isDeletable !== false && !item.hasBeenConfirmedOrReserved && item.status === 'CANDIDATE' && (
-                        <button onClick={() => deleteItem(tripId, item.id)} className="text-xs text-red-400 hover:text-red-600 px-1">삭제</button>
+                        <button onClick={async () => { await deleteItem(tripId, item.id); fetchLogs(tripId) }} className="text-xs text-red-400 hover:text-red-600 px-1">삭제</button>
                       )}
                     </div>
                   )}
@@ -289,7 +297,7 @@ export default function TripDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
             <input value={itemForm.externalLink} onChange={(e) => setItemForm({ ...itemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
-          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim()} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">추가</button>
+          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
         </div>
       </Modal>
 

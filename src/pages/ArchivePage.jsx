@@ -22,7 +22,7 @@ const STATUS_LABELS = {
 }
 
 export default function ArchivePage() {
-  const [tab, setTab] = useState('places')
+  const [tab, setTab] = useState('trips')
   const [placeCategory, setPlaceCategory] = useState(undefined)
   const [sort, setSort] = useState('rating')
   const { places, tripRecords, fetchPlaces, fetchTripRecords, loading } = useArchiveStore()
@@ -38,8 +38,8 @@ export default function ArchivePage() {
       <h1 className="text-xl font-bold text-gray-900">기록</h1>
 
       <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-        <button onClick={() => setTab('places')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'places' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>장소 기록</button>
         <button onClick={() => setTab('trips')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'trips' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>여행별 기록</button>
+        <button onClick={() => setTab('places')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'places' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>장소 기록</button>
       </div>
 
       {tab === 'places' && (
