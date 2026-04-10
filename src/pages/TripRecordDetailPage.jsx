@@ -7,6 +7,7 @@ import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
 import * as tripsApi from '../api/trips'
 import * as planItemsApi from '../api/planItems'
+import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 
 export default function TripRecordDetailPage() {
   const { tripId } = useParams()
@@ -55,7 +56,7 @@ export default function TripRecordDetailPage() {
     setEditItemForm({
       note: item.note || '',
       externalLink: item.externalLink || '',
-      price: item.price ?? '',
+      price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
       nights: item.nights ?? '',
     })
@@ -68,7 +69,7 @@ export default function TripRecordDetailPage() {
       await planItemsApi.updatePlanItem(tripId, editItem.id, {
         note: editItemForm.note || null,
         externalLink: editItemForm.externalLink || null,
-        price: editItemForm.price !== '' ? Number(editItemForm.price) : null,
+        price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
         nights: editItemForm.nights !== '' ? Number(editItemForm.nights) : null,
       })
@@ -321,7 +322,15 @@ export default function TripRecordDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
-              <input type="number" value={editItemForm.price} onChange={(e) => setEditItemForm({ ...editItemForm, price: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="원" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={editItemForm.price}
+                onChange={(e) => setEditItemForm({ ...editItemForm, price: formatPriceInput(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                placeholder="원"
+              />
             </div>
             {editItem.place.category === 'FOOD' && (
               <div>

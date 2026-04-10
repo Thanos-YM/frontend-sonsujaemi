@@ -9,6 +9,7 @@ import usePlanItemStore from '../stores/usePlanItemStore'
 import useAuthStore from '../stores/useAuthStore'
 import Modal from '../components/Modal'
 import UserBadge from '../components/UserBadge'
+import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 
 const CATEGORIES = [
   { value: null, label: '전체' },
@@ -95,12 +96,12 @@ export default function TripDetailPage() {
   }
 
   const handleAddItem = async () => {
-    if (!itemForm.placeName.trim() || submitting) return
+    if (!itemForm.placeName.trim() || !itemForm.address.trim() || submitting) return
     setSubmitting(true)
     try {
       const payload = {
         ...itemForm,
-        price: itemForm.price ? Number(itemForm.price) : null,
+        price: parsePriceToNumber(itemForm.price),
         nights: itemForm.nights ? Number(itemForm.nights) : null,
         menuItems: itemForm.menuItems || null,
       }
@@ -120,7 +121,7 @@ export default function TripDetailPage() {
     setEditItemForm({
       note: item.note || '',
       externalLink: item.externalLink || '',
-      price: item.price ?? '',
+      price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
       nights: item.nights ?? '',
     })
@@ -133,7 +134,7 @@ export default function TripDetailPage() {
       const payload = {
         note: editItemForm.note || null,
         externalLink: editItemForm.externalLink || null,
-        price: editItemForm.price !== '' ? Number(editItemForm.price) : null,
+        price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
         nights: editItemForm.nights !== '' ? Number(editItemForm.nights) : null,
       }
@@ -369,12 +370,20 @@ export default function TripDetailPage() {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">주소</label>
-            <input value={itemForm.address} onChange={(e) => setItemForm({ ...itemForm, address: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <label className="block text-sm font-medium text-gray-700 mb-1">주소 *</label>
+            <input value={itemForm.address} onChange={(e) => setItemForm({ ...itemForm, address: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="주소를 입력하세요" autoComplete="street-address" />
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
-            <input type="number" value={itemForm.price} onChange={(e) => setItemForm({ ...itemForm, price: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="원" />
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={itemForm.price}
+              onChange={(e) => setItemForm({ ...itemForm, price: formatPriceInput(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              placeholder="원"
+            />
           </div>
           {itemForm.category === 'FOOD' && (
             <div>
@@ -396,7 +405,7 @@ export default function TripDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
             <input value={itemForm.externalLink} onChange={(e) => setItemForm({ ...itemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
-          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
+          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
         </div>
       </Modal>
 
@@ -410,7 +419,15 @@ export default function TripDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
-              <input type="number" value={editItemForm.price} onChange={(e) => setEditItemForm({ ...editItemForm, price: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="원" />
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="off"
+                value={editItemForm.price}
+                onChange={(e) => setEditItemForm({ ...editItemForm, price: formatPriceInput(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                placeholder="원"
+              />
             </div>
             {editItem.place.category === 'FOOD' && (
               <div>
