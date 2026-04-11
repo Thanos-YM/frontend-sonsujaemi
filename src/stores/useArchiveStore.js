@@ -28,6 +28,12 @@ const useArchiveStore = create((set) => ({
     }
   },
 
+  updatePlaceArchiveNote: async (placeId, data) => {
+    const res = await api.updatePlaceArchiveNote(placeId, data)
+    set({ placeDetail: res.data.data })
+    return res.data.data
+  },
+
   fetchTripRecords: async () => {
     set({ loading: true })
     try {

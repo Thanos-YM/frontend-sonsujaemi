@@ -10,6 +10,7 @@ import useAuthStore from '../stores/useAuthStore'
 import Modal from '../components/Modal'
 import UserBadge from '../components/UserBadge'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
+import { FOOD_CATEGORIES } from '../constants/foodCategories'
 
 const CATEGORIES = [
   { value: null, label: '전체' },
@@ -55,11 +56,11 @@ export default function TripDetailPage() {
   const [cancelReason, setCancelReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [editItem, setEditItem] = useState(null)
-  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '' })
+  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
 
   const [infoForm, setInfoForm] = useState({ title: '', region: '' })
   const [gatherForm, setGatherForm] = useState({ gatherPlace: '', gatherTime: '', gatherNote: '' })
-  const [itemForm, setItemForm] = useState({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '' })
+  const [itemForm, setItemForm] = useState({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
 
   useEffect(() => { fetchTrip(tripId) }, [tripId, fetchTrip])
   useEffect(() => { fetchItems(tripId, category) }, [tripId, category, fetchItems])
@@ -104,10 +105,11 @@ export default function TripDetailPage() {
         price: parsePriceToNumber(itemForm.price),
         nights: itemForm.nights ? Number(itemForm.nights) : null,
         menuItems: itemForm.menuItems || null,
+        foodCategory: itemForm.category === 'FOOD' ? (itemForm.foodCategory || null) : null,
       }
       await createItem(tripId, payload)
       setShowAddItem(false)
-      setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '' })
+      setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
       fetchLogs(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '추가 실패')
@@ -124,6 +126,7 @@ export default function TripDetailPage() {
       price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
       nights: item.nights ?? '',
+      foodCategory: item.foodCategory || '',
     })
   }
 
@@ -137,6 +140,7 @@ export default function TripDetailPage() {
         price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
         nights: editItemForm.nights !== '' ? Number(editItemForm.nights) : null,
+        foodCategory: editItem.place.category === 'FOOD' ? (editItemForm.foodCategory || null) : null,
       }
       await updateItem(tripId, editItem.id, payload)
       setEditItem(null)
@@ -285,6 +289,9 @@ export default function TripDetailPage() {
                             <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
                             <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${st.color}`}>{st.label}</span>
                             <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
+                            {item.foodCategoryDisplayName && (
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">{item.foodCategoryDisplayName}</span>
+                            )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                             {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
@@ -386,10 +393,18 @@ export default function TripDetailPage() {
             />
           </div>
           {itemForm.category === 'FOOD' && (
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
-              <textarea value={itemForm.menuItems} onChange={(e) => setItemForm({ ...itemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
-            </div>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">식당 대분류</label>
+                <select value={itemForm.foodCategory} onChange={(e) => setItemForm({ ...itemForm, foodCategory: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                  {FOOD_CATEGORIES.map((c) => <option key={c.label + c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                <textarea value={itemForm.menuItems} onChange={(e) => setItemForm({ ...itemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+              </div>
+            </>
           )}
           {itemForm.category === 'ACCOMMODATION' && (
             <div>
@@ -430,10 +445,18 @@ export default function TripDetailPage() {
               />
             </div>
             {editItem.place.category === 'FOOD' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
-                <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">식당 대분류</label>
+                  <select value={editItemForm.foodCategory} onChange={(e) => setEditItemForm({ ...editItemForm, foodCategory: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    {FOOD_CATEGORIES.map((c) => <option key={c.label + c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                  <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+                </div>
+              </>
             )}
             {editItem.place.category === 'ACCOMMODATION' && (
               <div>

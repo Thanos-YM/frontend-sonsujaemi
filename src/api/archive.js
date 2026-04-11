@@ -6,6 +6,9 @@ export const getPlaceSummaries = (category, sort) =>
 export const getPlaceDetail = (placeId) =>
   client.get(`/archive/places/${placeId}`)
 
+export const updatePlaceArchiveNote = (placeId, data) =>
+  client.patch(`/archive/places/${placeId}`, data)
+
 export const getTripRecords = () => client.get('/archive/trips')
 
 export const getTripRecordDetail = (tripId) =>

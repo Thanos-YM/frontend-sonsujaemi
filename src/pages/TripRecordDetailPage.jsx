@@ -8,6 +8,7 @@ import Modal from '../components/Modal'
 import * as tripsApi from '../api/trips'
 import * as planItemsApi from '../api/planItems'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
+import { FOOD_CATEGORIES } from '../constants/foodCategories'
 
 export default function TripRecordDetailPage() {
   const { tripId } = useParams()
@@ -18,7 +19,7 @@ export default function TripRecordDetailPage() {
   const [reviewForm, setReviewForm] = useState({ rating: 5, content: '' })
   const [myReview, setMyReview] = useState(null)
   const [editItem, setEditItem] = useState(null)
-  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '' })
+  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
   const [submitting, setSubmitting] = useState(false)
   const [expandedItemId, setExpandedItemId] = useState(null)
   const [itemReviews, setItemReviews] = useState({})
@@ -59,6 +60,7 @@ export default function TripRecordDetailPage() {
       price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
       nights: item.nights ?? '',
+      foodCategory: item.foodCategory || '',
     })
   }
 
@@ -72,6 +74,7 @@ export default function TripRecordDetailPage() {
         price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
         nights: editItemForm.nights !== '' ? Number(editItemForm.nights) : null,
+        foodCategory: editItem.place.category === 'FOOD' ? (editItemForm.foodCategory || null) : null,
       })
       setEditItem(null)
       fetchTripRecordDetail(tripId)
@@ -185,6 +188,9 @@ export default function TripRecordDetailPage() {
                           {item.status === 'CONFIRMED' ? '확정' : item.status === 'RESERVED' ? '예약완료' : item.status === 'CANCELLED' ? '취소' : '후보'}
                         </span>
                         <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
+                        {item.foodCategoryDisplayName && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">{item.foodCategoryDisplayName}</span>
+                        )}
                         {isExpanded ? <ChevronUp size={14} className="text-gray-400" /> : <ChevronDown size={14} className="text-gray-400" />}
                       </div>
                       <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
@@ -333,10 +339,18 @@ export default function TripRecordDetailPage() {
               />
             </div>
             {editItem.place.category === 'FOOD' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
-                <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
-              </div>
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">식당 대분류</label>
+                  <select value={editItemForm.foodCategory} onChange={(e) => setEditItemForm({ ...editItemForm, foodCategory: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                    {FOOD_CATEGORIES.map((c) => <option key={c.label + c.value} value={c.value}>{c.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                  <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+                </div>
+              </>
             )}
             {editItem.place.category === 'ACCOMMODATION' && (
               <div>
