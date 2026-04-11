@@ -401,7 +401,7 @@ export default function TripDetailPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">주문한 메뉴</label>
                 <textarea value={itemForm.menuItems} onChange={(e) => setItemForm({ ...itemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
               </div>
             </>
@@ -453,7 +453,7 @@ export default function TripDetailPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">시킨 메뉴</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">주문한 메뉴</label>
                   <textarea value={editItemForm.menuItems} onChange={(e) => setEditItemForm({ ...editItemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
                 </div>
               </>

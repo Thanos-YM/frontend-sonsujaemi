@@ -131,7 +131,7 @@ export default function AvailabilityPage() {
 
   const handleFixToggle = (dateStr, day) => {
     const info = availabilityMap[dateStr]
-    if (!info || info.count < 5) return
+    if (!info || info.count < 1) return
     if (isPast(day)) return
 
     const idx = fixDates.indexOf(dateStr)
@@ -196,13 +196,13 @@ export default function AvailabilityPage() {
     const isSelected = selectedDates.has(dateStr)
     const isConfirmed = confirmedDates.has(dateStr)
     const isFixSelected = fixDates.includes(dateStr)
-    const allAvailable = info?.count >= 5
+    const canSelectForFix = info && info.count >= 1
 
     if (isConfirmed) return 'bg-emerald-100 border-emerald-300 text-emerald-700 cursor-not-allowed'
     if (past) return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     if (fixMode) {
       if (isFixSelected) return 'bg-emerald-500 text-white border-emerald-600 ring-2 ring-emerald-300'
-      if (allAvailable) return 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
+      if (canSelectForFix) return 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
       return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     }
     if (isSelected) return 'bg-indigo-500 text-white border-indigo-600 shadow-sm'
