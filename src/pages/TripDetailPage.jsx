@@ -11,6 +11,24 @@ import Modal from '../components/Modal'
 import UserBadge from '../components/UserBadge'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 import { FOOD_CATEGORIES } from '../constants/foodCategories'
+import { searchKakaoPlaces } from '../api/places'
+
+const emptyItemForm = () => ({
+  placeName: '',
+  category: 'FOOD',
+  address: '',
+  status: 'CANDIDATE',
+  note: '',
+  externalLink: '',
+  price: '',
+  menuItems: '',
+  nights: '',
+  foodCategory: '',
+  kakaoPlaceId: '',
+  latitude: null,
+  longitude: null,
+  placeUrl: '',
+})
 
 const CATEGORIES = [
   { value: null, label: '전체' },
@@ -60,7 +78,9 @@ export default function TripDetailPage() {
 
   const [infoForm, setInfoForm] = useState({ title: '', region: '' })
   const [gatherForm, setGatherForm] = useState({ gatherPlace: '', gatherTime: '', gatherNote: '' })
-  const [itemForm, setItemForm] = useState({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
+  const [itemForm, setItemForm] = useState(emptyItemForm)
+  const [kakaoResults, setKakaoResults] = useState([])
+  const [kakaoLoading, setKakaoLoading] = useState(false)
 
   useEffect(() => { fetchTrip(tripId) }, [tripId, fetchTrip])
   useEffect(() => { fetchItems(tripId, category) }, [tripId, category, fetchItems])
@@ -76,6 +96,41 @@ export default function TripDetailPage() {
       })
     }
   }, [trip])
+
+  useEffect(() => {
+    if (!showAddItem) return
+    const q = itemForm.placeName.trim()
+    if (q.length < 2) {
+      setKakaoResults([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      setKakaoLoading(true)
+      try {
+        const res = await searchKakaoPlaces({ query: q, page: 1, size: 10 })
+        setKakaoResults(res.data.data || [])
+      } catch {
+        setKakaoResults([])
+      } finally {
+        setKakaoLoading(false)
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [itemForm.placeName, showAddItem])
+
+  const selectKakaoPlace = (doc) => {
+    const addr = doc.roadAddressName || doc.addressName || ''
+    setItemForm((prev) => ({
+      ...prev,
+      placeName: doc.placeName || '',
+      address: addr,
+      kakaoPlaceId: doc.id || '',
+      latitude: doc.latitude ?? null,
+      longitude: doc.longitude ?? null,
+      placeUrl: doc.placeUrl || '',
+    }))
+    setKakaoResults([])
+  }
 
   if (!trip) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" /></div>
 
@@ -101,15 +156,27 @@ export default function TripDetailPage() {
     setSubmitting(true)
     try {
       const payload = {
-        ...itemForm,
+        placeName: itemForm.placeName.trim(),
+        category: itemForm.category,
+        address: itemForm.address.trim(),
+        status: itemForm.status,
+        note: itemForm.note || null,
+        externalLink: itemForm.externalLink || null,
         price: parsePriceToNumber(itemForm.price),
         nights: itemForm.nights ? Number(itemForm.nights) : null,
         menuItems: itemForm.menuItems || null,
         foodCategory: itemForm.category === 'FOOD' ? (itemForm.foodCategory || null) : null,
       }
+      if (itemForm.kakaoPlaceId) {
+        payload.kakaoPlaceId = itemForm.kakaoPlaceId
+        if (itemForm.latitude != null) payload.latitude = itemForm.latitude
+        if (itemForm.longitude != null) payload.longitude = itemForm.longitude
+        if (itemForm.placeUrl) payload.placeUrl = itemForm.placeUrl
+      }
       await createItem(tripId, payload)
       setShowAddItem(false)
-      setItemForm({ placeName: '', category: 'FOOD', address: '', status: 'CANDIDATE', note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
+      setItemForm(emptyItemForm())
+      setKakaoResults([])
       fetchLogs(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '추가 실패')
@@ -266,7 +333,18 @@ export default function TripDetailPage() {
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">계획 항목</h3>
-          {isUpcoming && <button onClick={() => setShowAddItem(true)} className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors">+ 추가</button>}
+          {isUpcoming && (
+            <button
+              onClick={() => {
+                setItemForm(emptyItemForm())
+                setKakaoResults([])
+                setShowAddItem(true)
+              }}
+              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors"
+            >
+              + 추가
+            </button>
+          )}
         </div>
         <div className="flex gap-1 mb-3">
           {CATEGORIES.map((c) => (
@@ -352,16 +430,60 @@ export default function TripDetailPage() {
       </div>
 
       {/* 항목 추가 모달 */}
-      <Modal open={showAddItem} onClose={() => setShowAddItem(false)} title="계획 항목 추가">
+      <Modal open={showAddItem} onClose={() => { setShowAddItem(false); setKakaoResults([]) }} title="계획 항목 추가">
         <div className="space-y-3">
-          <div>
+          <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">장소명 *</label>
-            <input value={itemForm.placeName} onChange={(e) => setItemForm({ ...itemForm, placeName: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+            <input
+              value={itemForm.placeName}
+              onChange={(e) => {
+                const v = e.target.value
+                setItemForm((prev) => ({
+                  ...prev,
+                  placeName: v,
+                  ...(prev.kakaoPlaceId
+                    ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                    : {}),
+                }))
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              autoComplete="off"
+            />
+            {kakaoLoading && <p className="text-xs text-gray-400 mt-1">장소 검색 중…</p>}
+            {kakaoResults.length > 0 && (
+              <ul className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg text-sm">
+                {kakaoResults.map((doc) => (
+                  <li key={doc.id}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-indigo-50 border-b border-gray-50 last:border-0"
+                      onClick={() => selectKakaoPlace(doc)}
+                    >
+                      <div className="font-medium text-gray-900">{doc.placeName}</div>
+                      <div className="text-xs text-gray-500 truncate">{doc.roadAddressName || doc.addressName || '주소 없음'}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 *</label>
-              <select value={itemForm.category} onChange={(e) => setItemForm({ ...itemForm, category: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+              <select
+                value={itemForm.category}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setItemForm((prev) => ({
+                    ...prev,
+                    category: v,
+                    ...(prev.kakaoPlaceId
+                      ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                      : {}),
+                  }))
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
                 <option value="ACCOMMODATION">숙소</option>
                 <option value="FOOD">식당</option>
                 <option value="ACTIVITY">놀거리</option>
@@ -378,7 +500,25 @@ export default function TripDetailPage() {
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">주소 *</label>
-            <input value={itemForm.address} onChange={(e) => setItemForm({ ...itemForm, address: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="주소를 입력하세요" autoComplete="street-address" />
+            <input
+              value={itemForm.address}
+              onChange={(e) => {
+                const v = e.target.value
+                setItemForm((prev) => ({
+                  ...prev,
+                  address: v,
+                  ...(prev.kakaoPlaceId
+                    ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                    : {}),
+                }))
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              placeholder="주소를 입력하세요"
+              autoComplete="street-address"
+            />
+            {itemForm.kakaoPlaceId ? (
+              <p className="text-xs text-emerald-600 mt-1">주소를 바꾸면 수동 입력으로 전환됩니다.</p>
+            ) : null}
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
