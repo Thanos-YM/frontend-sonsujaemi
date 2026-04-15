@@ -157,7 +157,11 @@ export default function AvailabilityPage() {
   const handleSave = async () => {
     setSaving(true)
     try {
-      const datesToSave = [...selectedDates].filter((d) => !confirmedDates.has(d))
+      const now = new Date()
+      const todayStr = formatDate(now.getFullYear(), now.getMonth() + 1, now.getDate())
+      const datesToSave = [...selectedDates].filter(
+        (d) => !confirmedDates.has(d) && d >= todayStr,
+      )
       await save(year, month, datesToSave)
       setDirty(false)
     } catch (err) {
