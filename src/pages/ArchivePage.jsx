@@ -47,7 +47,7 @@ export default function ArchivePage() {
           <div className="flex items-center justify-between">
             <div className="flex gap-1">
               {PLACE_CATEGORIES.map((c) => (
-                <button key={c.label} onClick={() => setPlaceCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${placeCategory === c.value ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+                <button key={c.label} onClick={() => setPlaceCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${placeCategory === c.value ? 'bg-[#F4928A]/15 text-[#F4928A]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
               ))}
             </div>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="text-xs border border-gray-200 rounded-lg px-2 py-1">
@@ -56,7 +56,7 @@ export default function ArchivePage() {
           </div>
 
           {loading ? (
-            <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" /></div>
+            <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" /></div>
           ) : places.length === 0 ? (
             <p className="text-center py-12 text-gray-400">등록된 장소가 없습니다.</p>
           ) : (
@@ -87,7 +87,7 @@ export default function ArchivePage() {
 
       {tab === 'trips' && (
         loading ? (
-          <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" /></div>
+          <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" /></div>
         ) : tripRecords.length === 0 ? (
           <p className="text-center py-12 text-gray-400">기록된 여행이 없습니다.</p>
         ) : (

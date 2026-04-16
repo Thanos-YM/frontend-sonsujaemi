@@ -4,7 +4,7 @@ import { MapPin, Calendar, ChevronRight } from 'lucide-react'
 import useTripStore from '../stores/useTripStore'
 
 const STATUS_LABELS = {
-  UPCOMING: { label: '예정', color: 'bg-blue-100 text-blue-700' },
+  UPCOMING: { label: '예정', color: 'bg-[#F4928A]/15 text-[#F4928A]' },
   COMPLETED: { label: '완료', color: 'bg-green-100 text-green-700' },
   CANCELLED: { label: '취소', color: 'bg-red-100 text-red-700' },
 }
@@ -44,7 +44,7 @@ export default function TripsPage() {
 
       {loading ? (
         <div className="flex justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" />
+          <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" />
         </div>
       ) : trips.length === 0 ? (
         <div className="text-center py-12 text-gray-400">여행이 없습니다.</div>

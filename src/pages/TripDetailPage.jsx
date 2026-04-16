@@ -39,7 +39,7 @@ const CATEGORIES = [
 
 const ITEM_STATUS = {
   CANDIDATE: { label: '후보', color: 'bg-gray-100 text-gray-600' },
-  CONFIRMED: { label: '확정', color: 'bg-blue-100 text-blue-700' },
+  CONFIRMED: { label: '확정', color: 'bg-[#F4928A]/15 text-[#F4928A]' },
   RESERVED: { label: '예약완료', color: 'bg-emerald-100 text-emerald-700' },
   CANCELLED: { label: '취소', color: 'bg-red-100 text-red-700' },
 }
@@ -132,7 +132,7 @@ export default function TripDetailPage() {
     setKakaoResults([])
   }
 
-  if (!trip) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" /></div>
+  if (!trip) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" /></div>
 
   const isUpcoming = trip.status === 'UPCOMING'
 
@@ -267,7 +267,7 @@ export default function TripDetailPage() {
               <input value={infoForm.title} onChange={(e) => setInfoForm({ ...infoForm, title: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="여행 제목" />
               <input value={infoForm.region} onChange={(e) => setInfoForm({ ...infoForm, region: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="지역" />
               <div className="flex gap-2">
-                <button onClick={handleSaveInfo} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
+                <button onClick={handleSaveInfo} className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
                 <button onClick={() => setEditInfo(false)} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs"><X size={12} className="inline mr-1" />취소</button>
               </div>
             </div>
@@ -275,7 +275,7 @@ export default function TripDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h2 className="text-xl font-bold text-gray-900">{trip.title}</h2>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-blue-100 text-blue-700' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-[#F4928A]/15 text-[#F4928A]' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                   {trip.status === 'UPCOMING' ? '예정' : trip.status === 'CANCELLED' ? '취소' : '완료'}
                 </span>
               </div>
@@ -312,7 +312,7 @@ export default function TripDetailPage() {
             <input type="datetime-local" value={gatherForm.gatherTime} onChange={(e) => setGatherForm({ ...gatherForm, gatherTime: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             <input value={gatherForm.gatherNote} onChange={(e) => setGatherForm({ ...gatherForm, gatherNote: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="메모" />
             <div className="flex gap-2">
-              <button onClick={handleSaveGather} className="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
+              <button onClick={handleSaveGather} className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
               <button onClick={() => setEditGather(false)} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs"><X size={12} className="inline mr-1" />취소</button>
             </div>
           </div>
@@ -340,7 +340,7 @@ export default function TripDetailPage() {
                 setKakaoResults([])
                 setShowAddItem(true)
               }}
-              className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-medium hover:bg-indigo-700 transition-colors"
+              className="px-3 py-1 bg-[#F4928A] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors"
             >
               + 추가
             </button>
@@ -348,7 +348,7 @@ export default function TripDetailPage() {
         </div>
         <div className="flex gap-1 mb-3">
           {CATEGORIES.map((c) => (
-            <button key={c.label} onClick={() => setCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${category === c.value ? 'bg-indigo-100 text-indigo-700' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+            <button key={c.label} onClick={() => setCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${category === c.value ? 'bg-[#F4928A]/15 text-[#F4928A]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
           ))}
         </div>
         {items.length === 0 ? (
@@ -377,7 +377,7 @@ export default function TripDetailPage() {
                             {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
                           </div>
                           {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
-                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-indigo-500 hover:underline">링크</a>}
+                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#F4928A] hover:underline">링크</a>}
                         </div>
                         <div className="flex items-center gap-1 shrink-0">
                           {isUpcoming && item.status !== 'CANCELLED' && (
@@ -394,8 +394,8 @@ export default function TripDetailPage() {
                           )}
                           {item.status !== 'CANCELLED' && (
                             <>
-                              <button onClick={() => openEditItem(item)} className="text-xs text-indigo-500 hover:text-indigo-700 px-1">수정</button>
-                              <button onClick={async () => { if (confirm('이 항목을 삭제하시겠습니까?')) { await deleteItem(tripId, item.id); fetchLogs(tripId) } }} className="text-xs text-red-400 hover:text-red-600 px-1">삭제</button>
+                              <button onClick={() => openEditItem(item)} className="text-xs text-gray-600 hover:text-gray-900 px-1">수정</button>
+                              <button onClick={async () => { if (confirm('이 항목을 삭제하시겠습니까?')) { await deleteItem(tripId, item.id); fetchLogs(tripId) } }} className="text-xs text-red-500 hover:text-red-700 font-medium px-1">삭제</button>
                             </>
                           )}
                         </div>
@@ -456,7 +456,7 @@ export default function TripDetailPage() {
                   <li key={doc.id}>
                     <button
                       type="button"
-                      className="w-full text-left px-3 py-2 hover:bg-indigo-50 border-b border-gray-50 last:border-0"
+                      className="w-full text-left px-3 py-2 hover:bg-[#F4928A]/10 border-b border-gray-50 last:border-0"
                       onClick={() => selectKakaoPlace(doc)}
                     >
                       <div className="font-medium text-gray-900">{doc.placeName}</div>
@@ -560,7 +560,7 @@ export default function TripDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
             <input value={itemForm.externalLink} onChange={(e) => setItemForm({ ...itemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
-          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
+          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
         </div>
       </Modal>
 
@@ -612,7 +612,7 @@ export default function TripDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
               <input value={editItemForm.externalLink} onChange={(e) => setEditItemForm({ ...editItemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
-            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
+            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
           </div>
         )}
       </Modal>

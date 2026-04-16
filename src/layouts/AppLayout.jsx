@@ -42,7 +42,7 @@ export default function AppLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-indigo-50 text-indigo-700'
+                      ? 'bg-[#F4928A]/15 text-[#F4928A]'
                       : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                   }`
                 }

@@ -72,7 +72,7 @@ export default function PlaceDetailPage() {
     }
   }
 
-  if (loading || !place) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-indigo-600 border-t-transparent" /></div>
+  if (loading || !place) return <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" /></div>
 
   const visitReviewMine = visitReviewItem && user
     ? visitReviewItem.reviews?.find((r) => r.user.id === user.id)
@@ -104,7 +104,7 @@ export default function PlaceDetailPage() {
             <button
               type="button"
               onClick={startEditArchive}
-              className="shrink-0 rounded-xl p-2.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 transition-colors"
+              className="shrink-0 rounded-xl p-2.5 text-gray-400 hover:text-[#F4928A] hover:bg-[#F4928A]/10 transition-colors"
               title="장소 기록 편집"
               aria-label="장소 기록 편집"
             >
@@ -127,7 +127,7 @@ export default function PlaceDetailPage() {
                 value={archiveDraft}
                 onChange={(e) => setArchiveDraft(e.target.value)}
                 rows={6}
-                className="w-full px-3 py-2.5 border border-indigo-200 rounded-xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-400 resize-y min-h-[120px]"
+                className="w-full px-3 py-2.5 border border-[#F4928A]/35 rounded-xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#F4928A]/30 focus:border-[#F4928A] resize-y min-h-[120px]"
                 placeholder="자유 형식으로 작성하세요."
                 autoFocus
               />
@@ -136,7 +136,7 @@ export default function PlaceDetailPage() {
                   type="button"
                   onClick={handleSavePlaceArchive}
                   disabled={archiveSaving}
-                  className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-700 disabled:opacity-50"
+                  className="px-4 py-2 rounded-lg bg-[#F4928A] text-white text-sm font-medium hover:brightness-95 disabled:opacity-50"
                 >
                   {archiveSaving ? '저장 중...' : '저장'}
                 </button>
@@ -175,7 +175,7 @@ export default function PlaceDetailPage() {
                 <button
                   type="button"
                   onClick={() => openVisitReview(visit)}
-                  className="shrink-0 text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center gap-1"
+                  className="shrink-0 text-xs text-[#F4928A] hover:text-[#d6736a] font-medium flex items-center gap-1"
                 >
                   <MessageSquare size={12} />
                   {myReview ? '내 후기 수정' : '후기 작성'}
@@ -229,7 +229,7 @@ export default function PlaceDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>
               <textarea value={visitReviewForm.content} onChange={(e) => setVisitReviewForm({ ...visitReviewForm, content: e.target.value })} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="이번 방문에 대한 후기를 작성해주세요" />
             </div>
-            <button type="button" onClick={handleSubmitVisitReview} disabled={!visitReviewForm.content.trim()} className="w-full py-2.5 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors text-sm">
+            <button type="button" onClick={handleSubmitVisitReview} disabled={!visitReviewForm.content.trim()} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">
               {visitReviewMine ? '수정' : '작성'}
             </button>
           </div>

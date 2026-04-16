@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { ChevronLeft, ChevronRight, Save, Lock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import useAvailabilityStore from '../stores/useAvailabilityStore'
 import useAuthStore from '../stores/useAuthStore'
 import useTripStore from '../stores/useTripStore'
 import { getTrips } from '../api/trips'
 import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
+import { getFixedAvailabilitySlots, sortUsersByAvailabilitySlot } from '../constants/availabilityMemberSlots'
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토']
 
@@ -21,6 +22,7 @@ function formatDate(year, month, day) {
 
 export default function AvailabilityPage() {
   const today = new Date()
+  const todayStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [selectedDates, setSelectedDates] = useState(new Set())
@@ -201,16 +203,31 @@ export default function AvailabilityPage() {
     const isConfirmed = confirmedDates.has(dateStr)
     const isFixSelected = fixDates.includes(dateStr)
     const canSelectForFix = info && info.count >= 1
+    const isAllVoted = info?.count === 5
 
-    if (isConfirmed) return 'bg-emerald-100 border-emerald-300 text-emerald-700 cursor-not-allowed'
+    // 확정된 일정은 쨍하지 않은 오렌지 톤으로 고정한다.
+    if (isConfirmed) return 'bg-[#fdf0d0] border-2 border-[#d4a44f] text-amber-900 cursor-not-allowed shadow-[0_0_0_3px_rgba(212,164,79,0.26),0_6px_14px_rgba(212,164,79,0.24)]'
     if (past) return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     if (fixMode) {
-      if (isFixSelected) return 'bg-emerald-500 text-white border-emerald-600 ring-2 ring-emerald-300'
-      if (canSelectForFix) return 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100 cursor-pointer'
+      if (isFixSelected) return 'bg-[#F4928A] text-white border-[#e07d74] ring-2 ring-[#F4928A]/40'
+      if (canSelectForFix) return 'bg-[#F4928A]/12 border-[#F4928A]/35 text-gray-800 hover:bg-[#F4928A]/22 cursor-pointer'
       return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     }
-    if (isSelected) return 'bg-indigo-500 text-white border-indigo-600 shadow-sm'
-    return 'bg-white border-gray-200 text-gray-700 hover:bg-indigo-50 hover:border-indigo-300 cursor-pointer'
+
+    // 기본은 흐린 연회색 배경을 사용한다.
+    let base = 'bg-gray-50 border-gray-200 text-gray-500 cursor-pointer'
+
+    // 내가 투표한 날짜만 흰색 배경으로 강조한다.
+    if (isSelected) {
+      base = 'bg-white border-gray-300 text-gray-700 cursor-pointer'
+    }
+
+    // 5명 전원 투표한 날짜는 확정일과 같은 테두리로 강조한다.
+    if (isAllVoted) {
+      base += ' !border-2 !border-[#d4a44f]'
+    }
+
+    return `${base} hover:border-[#F4928A]/40`
   }
 
   return (
@@ -223,7 +240,7 @@ export default function AvailabilityPage() {
               onClick={() => { setFixMode(!fixMode); setFixDates([]) }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 fixMode
-                  ? 'bg-emerald-600 text-white'
+                  ? 'bg-[#F4928A] text-white hover:brightness-95'
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -235,16 +252,15 @@ export default function AvailabilityPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-sm font-medium hover:brightness-95 disabled:opacity-50 transition-colors"
             >
-              <Save size={14} />
               {saving ? '저장 중...' : '저장'}
             </button>
           )}
           {fixMode && fixDates.length > 0 && (
             <button
               onClick={() => setShowFixModal(true)}
-              className="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm font-medium hover:bg-emerald-700 transition-colors"
+              className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors"
             >
               여행 만들기 ({fixDates.length}일)
             </button>
@@ -282,32 +298,39 @@ export default function AvailabilityPage() {
             const dateStr = formatDate(year, month, day)
             const info = availabilityMap[dateStr]
             const dayOfWeek = new Date(year, month - 1, day).getDay()
+            const isToday = dateStr === todayStr
+            const voteSlots = getFixedAvailabilitySlots(info?.availableUsers)
 
             return (
               <button
                 key={day}
                 onClick={() => toggleDate(day)}
-                className={`relative aspect-square rounded-lg border text-sm font-medium transition-all ${getCellStyle(day)}`}
+              className={`relative aspect-square rounded-xl border text-sm font-medium transition-all ${getCellStyle(day)}`}
               >
-                <span className={`${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''}`}>
+                <span className={`absolute top-1.5 left-1/2 -translate-x-1/2 ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'px-1.5 py-0.5 rounded-md bg-orange-100 text-orange-700 font-bold !text-orange-700' : ''}`}>
                   {day}
                 </span>
-                {confirmedDates.has(dateStr) && (
-                  <Lock size={10} className="absolute top-0.5 right-0.5 text-emerald-500" />
-                )}
-                {info && info.count > 0 && !fixMode && !confirmedDates.has(dateStr) && (
-                  <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-px">
-                    {info.availableUsers.slice(0, 5).map((u) => (
+                {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
+                  <div className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%] flex items-center justify-between">
+                    {voteSlots.map((slot) => (
                       <div
-                        key={u.id}
-                        className="w-1.5 h-1.5 rounded-full"
-                        style={{ backgroundColor: u.color }}
+                        key={slot.reactKey}
+                        className="w-4 h-4 shrink-0 rounded-full border-2 border-solid box-border"
+                        style={{
+                          borderColor: slot.borderColor,
+                          backgroundColor: slot.filled ? slot.fillColor : 'transparent',
+                        }}
                       />
                     ))}
                   </div>
                 )}
+                {confirmedDates.has(dateStr) && !fixMode && (
+                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-amber-500 text-xs font-semibold leading-none text-white">
+                    확정
+                  </span>
+                )}
                 {fixMode && info && (
-                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 text-[10px] font-bold">
+                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold">
                     {info.count}
                   </span>
                 )}
@@ -326,7 +349,7 @@ export default function AvailabilityPage() {
                 <div key={d.date} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-gray-50">
                   <span className="text-sm text-gray-600">{d.date}</span>
                   <div className="flex items-center gap-1.5">
-                    {d.availableUsers.map((u) => (
+                    {sortUsersByAvailabilitySlot(d.availableUsers).map((u) => (
                       <UserBadge key={u.id} user={u} size="xs" />
                     ))}
                     <span className="text-xs text-gray-400 ml-1">{d.count}명</span>
@@ -342,8 +365,8 @@ export default function AvailabilityPage() {
 
       <Modal open={showFixModal} onClose={() => setShowFixModal(false)} title="여행 만들기">
         <div className="space-y-4">
-          <div className="bg-emerald-50 rounded-lg px-3 py-2">
-            <p className="text-sm text-emerald-700 font-medium">
+          <div className="bg-[#F4928A]/12 rounded-lg px-3 py-2">
+            <p className="text-sm text-gray-800 font-medium">
               {fixDates[0]} ~ {fixDates[fixDates.length - 1]} ({fixDates.length}일)
             </p>
           </div>
@@ -353,7 +376,7 @@ export default function AvailabilityPage() {
               type="text"
               value={tripTitle}
               onChange={(e) => setTripTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none text-sm"
               placeholder="예: 5월 제주도 여행"
             />
           </div>
@@ -363,14 +386,14 @@ export default function AvailabilityPage() {
               type="text"
               value={tripRegion}
               onChange={(e) => setTripRegion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none text-sm"
               placeholder="예: 제주도"
             />
           </div>
           <button
             onClick={handleCreateTrip}
             disabled={!tripTitle.trim()}
-            className="w-full py-2.5 bg-emerald-600 text-white rounded-lg font-medium hover:bg-emerald-700 disabled:opacity-50 transition-colors text-sm"
+            className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
           >
             여행 만들기
           </button>
