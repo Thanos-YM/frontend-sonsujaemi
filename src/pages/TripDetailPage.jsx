@@ -260,8 +260,8 @@ export default function TripDetailPage() {
       </button>
 
       {/* 기본 정보 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-        <div className="flex items-start justify-between">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           {editInfo ? (
             <div className="flex-1 space-y-2">
               <input value={infoForm.title} onChange={(e) => setInfoForm({ ...infoForm, title: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="여행 제목" />
@@ -272,22 +272,22 @@ export default function TripDetailPage() {
               </div>
             </div>
           ) : (
-            <div>
-              <div className="flex items-center gap-2 mb-2">
-                <h2 className="text-xl font-bold text-gray-900">{trip.title}</h2>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-[#A299D8]/20 text-[#A299D8]' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2 mb-2">
+                <h2 className="text-lg sm:text-xl font-bold text-gray-900 break-words">{trip.title}</h2>
+                <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-[#A299D8]/20 text-[#A299D8]' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                   {trip.status === 'UPCOMING' ? '예정' : trip.status === 'CANCELLED' ? '취소' : '완료'}
                 </span>
               </div>
-              <div className="flex items-center gap-3 text-sm text-gray-500">
-                <span className="flex items-center gap-1"><Calendar size={13} />{trip.startDate} ~ {trip.endDate}</span>
-                {trip.region && <span className="flex items-center gap-1"><MapPin size={13} />{trip.region}</span>}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm text-gray-500">
+                <span className="flex items-center gap-1 min-w-0"><Calendar size={13} className="shrink-0" /><span className="break-all">{trip.startDate} ~ {trip.endDate}</span></span>
+                {trip.region && <span className="flex items-center gap-1 min-w-0"><MapPin size={13} className="shrink-0" /><span className="break-words">{trip.region}</span></span>}
               </div>
               {trip.cancelReason && <p className="text-sm text-red-500 mt-2">취소 사유: {trip.cancelReason}</p>}
             </div>
           )}
           {isUpcoming && !editInfo && (
-            <div className="flex gap-1.5">
+            <div className="flex gap-1.5 shrink-0 self-end sm:self-start">
               <button onClick={() => setEditInfo(true)} className="p-2 rounded-lg hover:bg-gray-100"><Edit2 size={14} className="text-gray-400" /></button>
               {isAdmin && (
                 <>
@@ -301,7 +301,7 @@ export default function TripDetailPage() {
       </div>
 
       {/* 집결 정보 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">집결 정보</h3>
           {isUpcoming && !editGather && <button onClick={() => setEditGather(true)} className="p-1 rounded hover:bg-gray-100"><Edit2 size={13} className="text-gray-400" /></button>}
@@ -330,25 +330,33 @@ export default function TripDetailPage() {
       </div>
 
       {/* 계획 항목 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">계획 항목</h3>
           {isUpcoming && (
             <button
+              type="button"
               onClick={() => {
                 setItemForm(emptyItemForm())
                 setKakaoResults([])
                 setShowAddItem(true)
               }}
-              className="px-3 py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors"
+              className="self-start sm:self-auto px-3 py-1.5 sm:py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors touch-manipulation"
             >
               + 추가
             </button>
           )}
         </div>
-        <div className="flex gap-1 mb-3">
+        <div className="flex gap-1 mb-3 overflow-x-auto pb-1 -mx-1 px-1">
           {CATEGORIES.map((c) => (
-            <button key={c.label} onClick={() => setCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${category === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+            <button
+              type="button"
+              key={c.label}
+              onClick={() => setCategory(c.value)}
+              className={`shrink-0 px-2.5 py-1 rounded-md text-xs font-medium transition-colors touch-manipulation ${category === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}
+            >
+              {c.label}
+            </button>
           ))}
         </div>
         {items.length === 0 ? (
@@ -361,30 +369,30 @@ export default function TripDetailPage() {
                   const st = ITEM_STATUS[item.status]
                   return (
                     <SortableItem key={item.id} id={item.id}>
-                      <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
-                        <div className="space-y-0.5 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
-                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${st.color}`}>{st.label}</span>
-                            <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between p-3 rounded-lg border border-gray-100 hover:bg-gray-50 transition-colors">
+                        <div className="space-y-0.5 min-w-0 flex-1">
+                          <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <span className="text-sm font-medium text-gray-900 break-words">{item.place.name}</span>
+                            <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium shrink-0 ${st.color}`}>{st.label}</span>
+                            <span className="text-[10px] text-gray-400 shrink-0">{item.place.categoryDisplayName}</span>
                             {item.foodCategoryDisplayName && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800">{item.foodCategoryDisplayName}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-800 shrink-0">{item.foodCategoryDisplayName}</span>
                             )}
                           </div>
                           <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
                             {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
-                            {item.menuItems && <span className="text-xs text-gray-500">{item.menuItems}</span>}
+                            {item.menuItems && <span className="text-xs text-gray-500 break-words">{item.menuItems}</span>}
                             {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
                           </div>
-                          {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
-                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#F4928A] hover:underline">링크</a>}
+                          {item.note && <p className="text-xs text-gray-400 break-words">{item.note}</p>}
+                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#F4928A] hover:underline break-all">링크</a>}
                         </div>
-                        <div className="flex items-center gap-1 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end sm:max-w-[min(100%,14rem)]">
                           {isUpcoming && item.status !== 'CANCELLED' && (
                             <select
                               value={item.status}
                               onChange={async (e) => { await changeStatus(tripId, item.id, e.target.value); fetchLogs(tripId) }}
-                              className="text-xs border border-gray-200 rounded px-1.5 py-1"
+                              className="text-xs border border-gray-200 rounded px-1.5 py-1 min-w-0 max-w-full touch-manipulation"
                             >
                               <option value="CANDIDATE">후보</option>
                               <option value="CONFIRMED">확정</option>
@@ -410,7 +418,7 @@ export default function TripDetailPage() {
       </div>
 
       {/* 활동 로그 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
         <h3 className="text-sm font-semibold text-gray-700 mb-3">활동 로그</h3>
         {logs.length === 0 ? (
           <p className="text-sm text-gray-400">활동 로그가 없습니다.</p>
@@ -467,7 +475,7 @@ export default function TripDetailPage() {
               </ul>
             )}
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 *</label>
               <select

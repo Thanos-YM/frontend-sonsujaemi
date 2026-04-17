@@ -58,22 +58,45 @@ export default function ArchivePage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">기록</h1>
+      <h1 className="text-lg sm:text-xl font-bold text-gray-900">기록</h1>
 
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-        <button onClick={() => setTab('trips')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'trips' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>여행별 기록</button>
-        <button onClick={() => setTab('places')} className={`px-4 py-1.5 rounded-md text-sm font-medium transition-colors ${tab === 'places' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}>장소 기록</button>
+      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-full sm:w-fit">
+        <button
+          type="button"
+          onClick={() => setTab('trips')}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${tab === 'trips' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+        >
+          여행별 기록
+        </button>
+        <button
+          type="button"
+          onClick={() => setTab('places')}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-2 sm:py-1.5 rounded-md text-sm font-medium transition-colors touch-manipulation ${tab === 'places' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+        >
+          장소 기록
+        </button>
       </div>
 
       {tab === 'places' && (
         <>
-          <div className="flex items-center justify-between">
-            <div className="flex gap-1">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 sm:mx-0 sm:px-0 sm:flex-wrap sm:overflow-visible">
               {PLACE_CATEGORIES.map((c) => (
-                <button key={c.label} onClick={() => setPlaceCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${placeCategory === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+                <button
+                  type="button"
+                  key={c.label}
+                  onClick={() => setPlaceCategory(c.value)}
+                  className={`shrink-0 px-2.5 py-1.5 sm:py-1 rounded-md text-xs font-medium transition-colors touch-manipulation ${placeCategory === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                  {c.label}
+                </button>
               ))}
             </div>
-            <select value={sort} onChange={(e) => setSort(e.target.value)} className="text-xs border border-gray-200 rounded-lg px-2 py-1">
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="text-xs border border-gray-200 rounded-lg px-2 py-2 sm:py-1 w-full sm:w-auto shrink-0 touch-manipulation"
+            >
               {SORT_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
             </select>
           </div>
@@ -134,20 +157,21 @@ export default function ArchivePage() {
               const isCancelled = t.status === 'CANCELLED'
               return (
                 <button
+                  type="button"
                   key={t.id}
                   onClick={() => navigate(`/archive/trips/${t.id}`)}
-                  className={`w-full bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow text-left flex items-center justify-between group ${
+                  className={`w-full bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow text-left flex items-start sm:items-center justify-between gap-3 group ${
                     isCancelled ? 'border-l-4 border-l-red-500' : ''
                   }`}
                 >
-                  <div className="space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`font-semibold ${isCancelled ? 'text-gray-500 line-through decoration-red-500' : 'text-gray-900'}`}>{t.title}</h3>
-                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s?.color}`}>{s?.label}</span>
+                  <div className="space-y-1.5 min-w-0 flex-1 text-left">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className={`font-semibold break-words ${isCancelled ? 'text-gray-500 line-through decoration-red-500' : 'text-gray-900'}`}>{t.title}</h3>
+                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${s?.color}`}>{s?.label}</span>
                     </div>
-                    <div className={`flex items-center gap-3 text-sm ${isCancelled ? 'text-gray-400 line-through decoration-red-500' : 'text-gray-500'}`}>
-                      <span className="flex items-center gap-1"><Calendar size={13} />{t.startDate} ~ {t.endDate}</span>
-                      {t.region && <span className="flex items-center gap-1"><MapPin size={13} />{t.region}</span>}
+                    <div className={`flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm ${isCancelled ? 'text-gray-400 line-through decoration-red-500' : 'text-gray-500'}`}>
+                      <span className="flex items-center gap-1 min-w-0"><Calendar size={13} className="shrink-0" /><span className="break-all">{t.startDate} ~ {t.endDate}</span></span>
+                      {t.region && <span className="flex items-center gap-1 min-w-0"><MapPin size={13} className="shrink-0" /><span className="break-words">{t.region}</span></span>}
                     </div>
                     {isCancelled && t.cancelReason && (
                       <p className="text-sm text-red-500 font-medium">취소 사유: {t.cancelReason}</p>

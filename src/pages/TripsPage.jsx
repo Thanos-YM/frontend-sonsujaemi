@@ -19,7 +19,7 @@ export default function TripsPage() {
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">여행</h1>
+      <h1 className="text-lg sm:text-xl font-bold text-gray-900">여행</h1>
 
       {loading ? (
         <div className="flex justify-center py-12">
@@ -44,24 +44,26 @@ export default function TripsPage() {
               <button
                 key={trip.id}
                 onClick={() => navigate(`/trips/${trip.id}`)}
-                className="w-full bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow text-left flex items-center justify-between group"
+                className="w-full bg-white rounded-xl border border-gray-200 p-3 sm:p-4 hover:shadow-md transition-shadow text-left flex items-start sm:items-center justify-between gap-3 group"
               >
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-semibold text-gray-900">{trip.title}</h3>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s.color}`}>
+                <div className="space-y-1.5 min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h3 className="font-semibold text-gray-900 break-words">{trip.title}</h3>
+                    <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${s.color}`}>
                       {s.label}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-sm text-gray-500">
-                    <span className="flex items-center gap-1">
-                      <Calendar size={13} />
-                      {trip.startDate} ~ {trip.endDate}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm text-gray-500">
+                    <span className="flex items-center gap-1 min-w-0">
+                      <Calendar size={13} className="shrink-0" />
+                      <span className="break-all">
+                        {trip.startDate} ~ {trip.endDate}
+                      </span>
                     </span>
                     {trip.region && (
-                      <span className="flex items-center gap-1">
-                        <MapPin size={13} />
-                        {trip.region}
+                      <span className="flex items-center gap-1 min-w-0">
+                        <MapPin size={13} className="shrink-0" />
+                        <span className="break-words">{trip.region}</span>
                       </span>
                     )}
                   </div>

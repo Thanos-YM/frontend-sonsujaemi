@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { Calendar, Map, BookOpen, LogOut, User } from 'lucide-react'
+import { Calendar, Map, BookOpen, LogOut } from 'lucide-react'
 import useAuthStore from '../stores/useAuthStore'
 
 const navItems = [
@@ -30,33 +30,37 @@ export default function AppLayout() {
     navigate('/login')
   }
 
+  const navLinkClass = ({ isActive }) =>
+    `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+      isActive ? 'bg-gray-100 text-black' : 'text-gray-400 hover:text-gray-500'
+    }`
+
+  const mobileNavClass = ({ isActive }) =>
+    `flex flex-1 flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-xl text-[11px] font-medium transition-colors min-h-[3rem] min-w-0 ${
+      isActive ? 'text-[#7466C5] bg-[#A299D8]/12' : 'text-gray-500 hover:text-gray-700'
+    }`
+
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-        <div className="max-w-5xl mx-auto px-4 h-14 flex items-center justify-between">
-          <nav className="flex gap-1">
+      <header className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm pt-safe">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-14 flex items-center justify-between gap-3">
+          <span className="md:hidden font-semibold text-gray-900 tracking-tight shrink-0">
+            손수재미
+          </span>
+          <nav className="hidden md:flex gap-1" aria-label="주요 메뉴">
             {navItems.map(({ to, label, icon: Icon }) => (
-              <NavLink
-                key={to}
-                to={to}
-                className={({ isActive }) =>
-                  `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    isActive
-                      ? 'bg-gray-100 text-black'
-                      : 'text-gray-400 hover:text-gray-500'
-                  }`
-                }
-              >
+              <NavLink key={to} to={to} className={navLinkClass}>
                 <Icon size={16} />
                 {label}
               </NavLink>
             ))}
           </nav>
 
-          <div className="relative" ref={profileRef}>
+          <div className="relative shrink-0" ref={profileRef}>
             <button
+              type="button"
               onClick={() => setProfileOpen(!profileOpen)}
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-2 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-colors max-w-[min(100%,12rem)]"
             >
               <div
                 className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
@@ -64,7 +68,9 @@ export default function AppLayout() {
               >
                 {user?.name?.charAt(0)}
               </div>
-              <span className="text-sm font-medium text-gray-700">{user?.name}</span>
+              <span className="hidden sm:inline text-sm font-medium text-gray-700 truncate">
+                {user?.name}
+              </span>
             </button>
 
             {profileOpen && (
@@ -87,9 +93,23 @@ export default function AppLayout() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 py-6">
+      <main className="max-w-5xl mx-auto px-3 sm:px-4 py-4 md:py-6 pb-[calc(5.25rem+env(safe-area-inset-bottom,0px))] md:pb-6">
         <Outlet />
       </main>
+
+      <nav
+        className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white/95 backdrop-blur-sm border-t border-gray-200 pb-safe shadow-[0_-4px_24px_rgba(0,0,0,0.06)]"
+        aria-label="주요 메뉴"
+      >
+        <div className="max-w-5xl mx-auto flex items-stretch justify-around px-1">
+          {navItems.map(({ to, label, icon: Icon }) => (
+            <NavLink key={to} to={to} className={mobileNavClass}>
+              <Icon size={20} strokeWidth={2} className="shrink-0" />
+              <span className="truncate max-w-full">{label}</span>
+            </NavLink>
+          ))}
+        </div>
+      </nav>
     </div>
   )
 }

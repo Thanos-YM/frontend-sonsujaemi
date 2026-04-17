@@ -86,11 +86,11 @@ export default function PlaceDetailPage() {
         <ArrowLeft size={16} /> 기록
       </button>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-xl font-bold text-gray-900 tracking-tight">{place.name}</h2>
+              <h2 className="text-lg sm:text-xl font-bold text-gray-900 tracking-tight break-words">{place.name}</h2>
               <span className="text-xs px-2 py-0.5 bg-gray-100 text-gray-600 rounded-md font-medium">{place.categoryDisplayName}</span>
             </div>
             {place.address && (
@@ -113,7 +113,7 @@ export default function PlaceDetailPage() {
           )}
         </div>
 
-        <div className="flex items-center gap-4 mt-4 pt-3 border-t border-gray-100 text-sm text-gray-600">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-3 border-t border-gray-100 text-sm text-gray-600">
           {place.averageRating && <span className="flex items-center gap-1"><Star size={14} className="text-yellow-500 fill-yellow-500" />{place.averageRating}</span>}
           <span>방문 {place.visitCount}회</span>
           <span>후기 {place.reviewCount}건</span>
@@ -168,9 +168,9 @@ export default function PlaceDetailPage() {
         const canReview = canWriteReview(visit)
         const myReview = user ? visit.reviews?.find((r) => r.user.id === user.id) : null
         return (
-          <div key={visit.planItemId} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-            <div className="flex items-center justify-between gap-2 mb-4">
-              <h4 className="text-sm font-semibold text-gray-800 truncate">{visit.tripTitle}</h4>
+          <div key={visit.planItemId} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-2 mb-4">
+              <h4 className="text-sm font-semibold text-gray-800 break-words min-w-0">{visit.tripTitle}</h4>
               {canReview && user && (
                 <button
                   type="button"

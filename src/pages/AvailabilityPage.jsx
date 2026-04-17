@@ -269,9 +269,9 @@ export default function AvailabilityPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-gray-900">일정 조율</h1>
-        <div className="flex gap-2">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-lg sm:text-xl font-bold text-gray-900">일정 조율</h1>
+        <div className="flex flex-wrap gap-2 sm:justify-end">
           {isAdmin && (
             <button
               onClick={() => { setFixMode(!fixMode); setFixDates([]) }}
@@ -305,28 +305,38 @@ export default function AvailabilityPage() {
         </div>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-5">
+        <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+          <button
+            type="button"
+            onClick={prevMonth}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors shrink-0 touch-manipulation"
+            aria-label="이전 달"
+          >
             <ChevronLeft size={20} />
           </button>
-          <h2 className="text-lg font-semibold text-gray-900">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 text-center min-w-0">
             {year}년 {month}월
           </h2>
-          <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
+          <button
+            type="button"
+            onClick={nextMonth}
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors shrink-0 touch-manipulation"
+            aria-label="다음 달"
+          >
             <ChevronRight size={20} />
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-1 mb-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
           {WEEKDAYS.map((d, i) => (
-            <div key={d} className={`text-center text-xs font-medium py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+            <div key={d} className={`text-center text-[10px] sm:text-xs font-medium py-0.5 sm:py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
               {d}
             </div>
           ))}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
           {Array.from({ length: firstDay }, (_, i) => (
             <div key={`empty-${i}`} />
           ))}
@@ -350,17 +360,17 @@ export default function AvailabilityPage() {
                   }
                   toggleDate(day)
                 }}
-                className={`relative aspect-square rounded-xl border text-sm font-medium transition-all ${getCellStyle(day)}`}
+                className={`relative aspect-square min-h-[2.75rem] sm:min-h-0 rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium transition-all touch-manipulation ${getCellStyle(day)}`}
               >
-                <span className={`absolute top-1.5 left-1/2 -translate-x-1/2 text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'font-bold underline decoration-2 underline-offset-2 decoration-gray-900' : ''}`}>
+                <span className={`absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 text-sm sm:text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'font-bold underline decoration-2 underline-offset-2 decoration-gray-900' : ''}`}>
                   {day}
                 </span>
                 {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
-                  <div className="absolute left-1/2 top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%] flex items-center justify-between">
+                  <div className="absolute left-1/2 top-[58%] sm:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[92%] sm:w-[88%] flex items-center justify-between gap-px">
                     {voteSlots.map((slot) => (
                       <div
                         key={slot.reactKey}
-                        className="w-4 h-4 shrink-0 rounded-full border-2 border-solid box-border"
+                        className="w-2.5 h-2.5 sm:w-4 sm:h-4 shrink-0 rounded-full border-2 border-solid box-border"
                         style={{
                           borderColor: slot.borderColor,
                           backgroundColor: slot.filled ? slot.fillColor : 'transparent',
@@ -370,7 +380,7 @@ export default function AvailabilityPage() {
                   </div>
                 )}
                 {fixMode && info && (
-                  <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold">
+                  <span className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold">
                     {info.count}
                   </span>
                 )}
@@ -381,14 +391,17 @@ export default function AvailabilityPage() {
       </div>
 
       {!fixMode && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-3 sm:p-4">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">날짜별 현황</h3>
           {data?.dates?.length > 0 ? (
             <div className="space-y-2">
               {data.dates.map((d) => (
-                <div key={d.date} className="flex items-center justify-between py-1.5 px-2 rounded-lg hover:bg-gray-50">
-                  <span className="text-sm text-gray-600">{d.date}</span>
-                  <div className="flex items-center gap-1.5">
+                <div
+                  key={d.date}
+                  className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between py-2 sm:py-1.5 px-2 rounded-lg hover:bg-gray-50"
+                >
+                  <span className="text-sm text-gray-600 shrink-0">{d.date}</span>
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end sm:justify-start">
                     {sortUsersByAvailabilitySlot(d.availableUsers).map((u) => (
                       <UserBadge key={u.id} user={u} size="xs" />
                     ))}

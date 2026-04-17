@@ -155,24 +155,24 @@ export default function TripRecordDetailPage() {
         <ArrowLeft size={16} /> 기록
       </button>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-        <div className="flex items-center gap-2 mb-2">
-          <h2 className="text-xl font-bold text-gray-900">{record.title}</h2>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${record.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-wrap items-center gap-2 mb-2">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 break-words">{record.title}</h2>
+          <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs font-medium ${record.status === 'COMPLETED' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
             {record.status === 'COMPLETED' ? '완료' : '취소'}
           </span>
         </div>
-        <div className="flex items-center gap-3 text-sm text-gray-500">
-          <span className="flex items-center gap-1"><Calendar size={13} />{record.startDate} ~ {record.endDate}</span>
-          {record.region && <span className="flex items-center gap-1"><MapPin size={13} />{record.region}</span>}
-          {record.averageRating && <span className="flex items-center gap-1"><Star size={13} className="text-yellow-500 fill-yellow-500" />{record.averageRating}</span>}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm text-gray-500">
+          <span className="flex items-center gap-1 min-w-0"><Calendar size={13} className="shrink-0" /><span className="break-all">{record.startDate} ~ {record.endDate}</span></span>
+          {record.region && <span className="flex items-center gap-1 min-w-0"><MapPin size={13} className="shrink-0" /><span className="break-words">{record.region}</span></span>}
+          {record.averageRating && <span className="flex items-center gap-1"><Star size={13} className="text-yellow-500 fill-yellow-500 shrink-0" />{record.averageRating}</span>}
         </div>
         {record.cancelReason && <p className="text-sm text-red-500 mt-2">취소 사유: {record.cancelReason}</p>}
       </div>
 
       {/* 계획 항목 */}
       {record.planItems?.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">계획 항목</h3>
           <div className="space-y-2">
             {record.planItems.map((item) => {
@@ -180,10 +180,10 @@ export default function TripRecordDetailPage() {
               const reviews = itemReviews[item.id] || []
               return (
                 <div key={item.id} className="rounded-lg border border-gray-100 overflow-hidden">
-                  <div className="flex items-center justify-between p-3 hover:bg-gray-50 transition-colors">
-                    <button onClick={() => toggleExpandItem(item.id)} className="flex-1 text-left space-y-0.5">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 hover:bg-gray-50 transition-colors">
+                    <button type="button" onClick={() => toggleExpandItem(item.id)} className="flex-1 text-left space-y-0.5 min-w-0">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-medium text-gray-900 break-words">{item.place.name}</span>
                         <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === 'CONFIRMED' ? 'bg-[#A299D8]/20 text-[#7466C5]' : item.status === 'RESERVED' ? 'bg-emerald-100 text-emerald-700' : item.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
                           {item.status === 'CONFIRMED' ? '확정' : item.status === 'RESERVED' ? '예약완료' : item.status === 'CANCELLED' ? '취소' : '후보'}
                         </span>
@@ -201,9 +201,9 @@ export default function TripRecordDetailPage() {
                       {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
                     </button>
                     {isCompleted && item.status !== 'CANCELLED' && (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <button onClick={() => openEditItem(item)} className="text-xs text-gray-600 hover:text-gray-900 px-1">수정</button>
-                        <button onClick={() => handleDeleteItem(item.id)} className="text-xs text-red-500 hover:text-red-700 font-medium px-1">삭제</button>
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                        <button type="button" onClick={() => openEditItem(item)} className="text-xs text-gray-600 hover:text-gray-900 px-1 touch-manipulation">수정</button>
+                        <button type="button" onClick={() => handleDeleteItem(item.id)} className="text-xs text-red-500 hover:text-red-700 font-medium px-1 touch-manipulation">삭제</button>
                       </div>
                     )}
                   </div>
@@ -244,11 +244,11 @@ export default function TripRecordDetailPage() {
       )}
 
       {/* 여행 총평 */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
-        <div className="flex items-center justify-between mb-3">
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">여행 총평</h3>
           {isCompleted && (
-            <button onClick={() => setShowReviewModal(true)} className="px-3 py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors">
+            <button type="button" onClick={() => setShowReviewModal(true)} className="self-start sm:self-auto px-3 py-2 sm:py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors touch-manipulation">
               {myReview ? '내 총평 수정' : '총평 작성'}
             </button>
           )}
@@ -273,7 +273,7 @@ export default function TripRecordDetailPage() {
 
       {/* 활동 로그 */}
       {record.logs?.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-5">
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
           <h3 className="text-sm font-semibold text-gray-700 mb-3">활동 로그</h3>
           <div className="space-y-2">
             {record.logs.map((log) => (
