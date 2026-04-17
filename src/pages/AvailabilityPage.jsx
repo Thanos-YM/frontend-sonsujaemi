@@ -370,13 +370,19 @@ export default function AvailabilityPage() {
                   }
                   toggleDate(day)
                 }}
-                className={`relative aspect-square min-h-[2.75rem] sm:min-h-0 rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium transition-all touch-manipulation ${getCellStyle(day)}`}
+                className={`relative aspect-square min-h-[2.75rem] max-[399px]:min-h-[3.5rem] sm:min-h-0 rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium transition-all touch-manipulation ${getCellStyle(day)}`}
               >
-                <span className={`absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 text-sm sm:text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'font-bold underline decoration-2 underline-offset-2 decoration-gray-900' : ''}`}>
+                <span
+                  className={`absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 text-sm sm:text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${
+                    isToday
+                      ? `font-bold underline decoration-2 underline-offset-2 max-[399px]:underline-offset-1 ${confirmedDates.has(dateStr) ? 'decoration-white' : 'decoration-gray-900'}`
+                      : ''
+                  }`}
+                >
                   {day}
                 </span>
                 {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
-                  <div className="absolute left-1/2 top-[70%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
+                  <div className="absolute left-1/2 top-[79%] min-[400px]:top-[70%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
                     {/* 800px 미만: 3개 + 2개 (2행), 800px 이상: 1행 5열 */}
                     <div className="flex flex-col items-center gap-0.5 min-[475px]:gap-1 min-[800px]:hidden">
                       <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(0, 3).map(voteDot)}</div>
