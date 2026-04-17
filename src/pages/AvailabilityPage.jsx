@@ -289,7 +289,7 @@ export default function AvailabilityPage() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-sm font-medium hover:brightness-95 disabled:opacity-50 transition-colors"
+              className="px-3 py-1.5 bg-[#7466C5] text-white rounded-lg text-sm font-medium hover:brightness-95 disabled:opacity-50 transition-colors"
             >
               {saving ? '저장 중...' : '저장'}
             </button>
@@ -297,7 +297,7 @@ export default function AvailabilityPage() {
           {fixMode && fixDates.length > 0 && (
             <button
               onClick={() => setShowFixModal(true)}
-              className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors"
+              className="px-3 py-1.5 bg-[#7466C5] text-white rounded-lg text-sm font-medium hover:brightness-95 transition-colors"
             >
               여행 만들기 ({fixDates.length}일)
             </button>
@@ -347,6 +347,16 @@ export default function AvailabilityPage() {
             const dayOfWeek = new Date(year, month - 1, day).getDay()
             const isToday = dateStr === todayStr
             const voteSlots = getFixedAvailabilitySlots(info?.availableUsers)
+            const voteDot = (slot) => (
+              <div
+                key={slot.reactKey}
+                className="w-2 h-2 min-[475px]:w-3 min-[475px]:h-3 min-[800px]:w-4 min-[800px]:h-4 shrink-0 rounded-full border-2 border-solid box-border"
+                style={{
+                  borderColor: slot.borderColor,
+                  backgroundColor: slot.filled ? slot.fillColor : 'transparent',
+                }}
+              />
+            )
 
             return (
               <button
@@ -366,17 +376,13 @@ export default function AvailabilityPage() {
                   {day}
                 </span>
                 {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
-                  <div className="absolute left-1/2 top-[58%] sm:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[92%] sm:w-[88%] flex items-center justify-between gap-px">
-                    {voteSlots.map((slot) => (
-                      <div
-                        key={slot.reactKey}
-                        className="w-2.5 h-2.5 sm:w-4 sm:h-4 shrink-0 rounded-full border-2 border-solid box-border"
-                        style={{
-                          borderColor: slot.borderColor,
-                          backgroundColor: slot.filled ? slot.fillColor : 'transparent',
-                        }}
-                      />
-                    ))}
+                  <div className="absolute left-1/2 top-[60%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
+                    {/* 800px 미만: 3개 + 2개 (2행), 800px 이상: 1행 5열 */}
+                    <div className="flex flex-col items-center gap-0.5 min-[475px]:gap-1 min-[800px]:hidden">
+                      <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(0, 3).map(voteDot)}</div>
+                      <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(3, 5).map(voteDot)}</div>
+                    </div>
+                    <div className="hidden min-[800px]:flex w-full items-center justify-between gap-px">{voteSlots.map(voteDot)}</div>
                   </div>
                 )}
                 {fixMode && info && (
@@ -418,7 +424,7 @@ export default function AvailabilityPage() {
 
       <Modal open={showFixModal} onClose={() => setShowFixModal(false)} title="여행 만들기">
         <div className="space-y-4">
-          <div className="bg-[#F4928A]/12 rounded-lg px-3 py-2">
+          <div className="bg-[#A299D8]/15 rounded-lg px-3 py-2 border border-[#A299D8]/25">
             <p className="text-sm text-gray-800 font-medium">
               {fixDates[0]} ~ {fixDates[fixDates.length - 1]} ({fixDates.length}일)
             </p>
@@ -429,7 +435,7 @@ export default function AvailabilityPage() {
               type="text"
               value={tripTitle}
               onChange={(e) => setTripTitle(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none text-sm"
               placeholder="예: 5월 제주도 여행"
             />
           </div>
@@ -439,14 +445,15 @@ export default function AvailabilityPage() {
               type="text"
               value={tripRegion}
               onChange={(e) => setTripRegion(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none text-sm"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none text-sm"
               placeholder="예: 제주도"
             />
           </div>
           <button
+            type="button"
             onClick={handleCreateTrip}
             disabled={!tripTitle.trim()}
-            className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
+            className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
           >
             여행 만들기
           </button>
