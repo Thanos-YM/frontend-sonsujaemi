@@ -26,10 +26,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-[#FDFBFA] to-[#F4928A]/6">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-[#F8F7FC] to-[#A299D8]/12">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 bg-white/70 shadow-sm border border-[#F4928A]/15">
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 bg-white/70 shadow-sm border border-[#A299D8]/35">
             <img
               src="/ssjm-icon.svg"
               alt="손수재미"
@@ -53,7 +53,7 @@ export default function LoginPage() {
               type="text"
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none transition-shadow text-sm"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-sm"
               placeholder="아이디를 입력하세요"
               required
             />
@@ -65,7 +65,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#F4928A]/40 focus:border-[#F4928A] outline-none transition-shadow text-sm"
+              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-sm"
               placeholder="비밀번호를 입력하세요"
               required
             />
@@ -74,7 +74,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-[#F4928A] text-white py-2.5 rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
+            className="w-full flex items-center justify-center gap-2 bg-[#7466C5] text-white py-2.5 rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
           >
             <LogIn size={16} />
             {loading ? '로그인 중...' : '로그인'}

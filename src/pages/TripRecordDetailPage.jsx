@@ -184,7 +184,7 @@ export default function TripRecordDetailPage() {
                     <button onClick={() => toggleExpandItem(item.id)} className="flex-1 text-left space-y-0.5">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-900">{item.place.name}</span>
-                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === 'CONFIRMED' ? 'bg-[#F4928A]/15 text-[#F4928A]' : item.status === 'RESERVED' ? 'bg-emerald-100 text-emerald-700' : item.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
+                        <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${item.status === 'CONFIRMED' ? 'bg-[#A299D8]/20 text-[#7466C5]' : item.status === 'RESERVED' ? 'bg-emerald-100 text-emerald-700' : item.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'}`}>
                           {item.status === 'CONFIRMED' ? '확정' : item.status === 'RESERVED' ? '예약완료' : item.status === 'CANCELLED' ? '취소' : '후보'}
                         </span>
                         <span className="text-[10px] text-gray-400">{item.place.categoryDisplayName}</span>
@@ -209,11 +209,11 @@ export default function TripRecordDetailPage() {
                   </div>
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t border-gray-50 bg-gray-50/50">
-                      {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#F4928A] hover:underline inline-block mt-2">외부 링크</a>}
+                      {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#7466C5] hover:text-[#6556B1] hover:underline inline-block mt-2">외부 링크</a>}
                       <div className="flex items-center justify-between mt-2 mb-1.5">
                         <span className="text-xs font-semibold text-gray-600 flex items-center gap-1"><MessageSquare size={12} /> 후기</span>
                         {isCompleted && (
-                          <button onClick={() => openVisitReview(item)} className="text-xs text-[#F4928A] hover:text-[#d6736a] font-medium">
+                          <button onClick={() => openVisitReview(item)} className="text-xs text-[#7466C5] hover:text-[#6556B1] font-medium">
                             {myVisitReviews[item.id] ? '내 후기 수정' : '후기 작성'}
                           </button>
                         )}
@@ -248,7 +248,7 @@ export default function TripRecordDetailPage() {
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-semibold text-gray-700">여행 총평</h3>
           {isCompleted && (
-            <button onClick={() => setShowReviewModal(true)} className="px-3 py-1 bg-[#F4928A] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors">
+            <button onClick={() => setShowReviewModal(true)} className="px-3 py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors">
               {myReview ? '내 총평 수정' : '총평 작성'}
             </button>
           )}
@@ -311,7 +311,7 @@ export default function TripRecordDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>
               <textarea value={visitReviewForm.content} onChange={(e) => setVisitReviewForm({ ...visitReviewForm, content: e.target.value })} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="이 장소에 대한 후기를 작성해주세요" />
             </div>
-            <button onClick={handleSubmitVisitReview} disabled={!visitReviewForm.content.trim()} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">
+            <button onClick={handleSubmitVisitReview} disabled={!visitReviewForm.content.trim()} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">
               {myVisitReviews[visitReviewItem.id] ? '수정' : '작성'}
             </button>
           </div>
@@ -366,7 +366,7 @@ export default function TripRecordDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
               <input value={editItemForm.externalLink} onChange={(e) => setEditItemForm({ ...editItemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
-            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
+            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
           </div>
         )}
       </Modal>
@@ -387,7 +387,7 @@ export default function TripRecordDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>
             <textarea value={reviewForm.content} onChange={(e) => setReviewForm({ ...reviewForm, content: e.target.value })} rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="여행에 대한 총평을 작성해주세요" />
           </div>
-          <button onClick={handleSubmitReview} disabled={!reviewForm.content.trim()} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">
+          <button onClick={handleSubmitReview} disabled={!reviewForm.content.trim()} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">
             {myReview ? '수정' : '작성'}
           </button>
         </div>

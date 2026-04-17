@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import useAvailabilityStore from '../stores/useAvailabilityStore'
 import useAuthStore from '../stores/useAuthStore'
@@ -21,11 +22,13 @@ function formatDate(year, month, day) {
 }
 
 export default function AvailabilityPage() {
+  const navigate = useNavigate()
   const today = new Date()
   const todayStr = formatDate(today.getFullYear(), today.getMonth() + 1, today.getDate())
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth() + 1)
   const [selectedDates, setSelectedDates] = useState(new Set())
+  const [savedDates, setSavedDates] = useState(new Set())
   const [dirty, setDirty] = useState(false)
   const [fixMode, setFixMode] = useState(false)
   const [fixDates, setFixDates] = useState([])
@@ -69,6 +72,7 @@ export default function AvailabilityPage() {
       }
     })
     setSelectedDates(myDates)
+    setSavedDates(new Set(myDates))
     setDirty(false)
   }, [data, user?.id])
 
@@ -127,8 +131,12 @@ export default function AvailabilityPage() {
     const next = new Set(selectedDates)
     if (next.has(dateStr)) next.delete(dateStr)
     else next.add(dateStr)
+
+    const hasChanges =
+      next.size !== savedDates.size || [...next].some((d) => !savedDates.has(d))
+
     setSelectedDates(next)
-    setDirty(true)
+    setDirty(hasChanges)
   }
 
   const handleFixToggle = (dateStr, day) => {
@@ -156,6 +164,26 @@ export default function AvailabilityPage() {
     return true
   }
 
+  /** dateStr(YYYY-MM-DD)이 속한 확정 여행. 문자열 비교로 범위 판별. */
+  const findTripContainingDate = useCallback(
+    (dateStr) =>
+      confirmedTrips.find((t) => dateStr >= t.startDate && dateStr <= t.endDate),
+    [confirmedTrips],
+  )
+
+  const navigateFromConfirmedDate = useCallback(
+    (dateStr) => {
+      const trip = findTripContainingDate(dateStr)
+      if (!trip) return
+      if (trip.status === 'COMPLETED') {
+        navigate(`/archive/trips/${trip.id}`)
+      } else {
+        navigate(`/trips/${trip.id}`)
+      }
+    },
+    [findTripContainingDate, navigate],
+  )
+
   const handleSave = async () => {
     setSaving(true)
     try {
@@ -165,6 +193,7 @@ export default function AvailabilityPage() {
         (d) => !confirmedDates.has(d) && d >= todayStr,
       )
       await save(year, month, datesToSave)
+      setSavedDates(new Set(selectedDates))
       setDirty(false)
     } catch (err) {
       alert(err.response?.data?.message || '저장 실패')
@@ -189,7 +218,7 @@ export default function AvailabilityPage() {
       setTripRegion('')
       fetch(year, month)
       fetchConfirmedTrips()
-      alert('여행이 생성되었습니다!')
+      navigate('/trips')
     } catch (err) {
       alert(err.response?.data?.message || '여행 생성 실패')
     }
@@ -199,35 +228,43 @@ export default function AvailabilityPage() {
     const dateStr = formatDate(year, month, day)
     const info = availabilityMap[dateStr]
     const past = isPast(day)
-    const isSelected = selectedDates.has(dateStr)
+    const isSavedSelected = savedDates.has(dateStr)
+    const hasUnsavedSelectionChange = selectedDates.has(dateStr) !== savedDates.has(dateStr)
     const isConfirmed = confirmedDates.has(dateStr)
     const isFixSelected = fixDates.includes(dateStr)
     const canSelectForFix = info && info.count >= 1
     const isAllVoted = info?.count === 5
 
-    // 확정된 일정은 쨍하지 않은 오렌지 톤으로 고정한다.
-    if (isConfirmed) return 'bg-[#fdf0d0] border-2 border-[#d4a44f] text-amber-900 cursor-not-allowed shadow-[0_0_0_3px_rgba(212,164,79,0.26),0_6px_14px_rgba(212,164,79,0.24)]'
+    // 확정된 일정은 진한 네이비(#1E1840) 톤. 클릭 시 기록/여행 상세로 이동.
+    if (isConfirmed) {
+      return 'bg-[#1E1840] border-2 border-[#1E1840] text-white cursor-pointer hover:brightness-[0.97] shadow-[0_0_0_3px_rgba(30,24,64,0.28),0_8px_18px_rgba(30,24,64,0.24)]'
+    }
     if (past) return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     if (fixMode) {
-      if (isFixSelected) return 'bg-[#F4928A] text-white border-[#e07d74] ring-2 ring-[#F4928A]/40'
-      if (canSelectForFix) return 'bg-[#F4928A]/12 border-[#F4928A]/35 text-gray-800 hover:bg-[#F4928A]/22 cursor-pointer'
+      if (isFixSelected) return 'bg-[#7466C5] text-white border-[#7466C5] ring-2 ring-[#7466C5]/35'
+      if (canSelectForFix) return 'bg-[#A299D8]/22 border-[#A299D8] text-gray-800 hover:bg-[#A299D8]/35 cursor-pointer'
       return 'bg-gray-50 text-gray-300 cursor-not-allowed'
     }
 
     // 기본은 흐린 연회색 배경을 사용한다.
     let base = 'bg-gray-50 border-gray-200 text-gray-500 cursor-pointer'
 
-    // 내가 투표한 날짜만 흰색 배경으로 강조한다.
-    if (isSelected) {
+    // 저장된 내 선택 날짜는 흰 배경으로 표시한다.
+    if (isSavedSelected) {
       base = 'bg-white border-gray-300 text-gray-700 cursor-pointer'
     }
 
-    // 5명 전원 투표한 날짜는 확정일과 같은 테두리로 강조한다.
-    if (isAllVoted) {
-      base += ' !border-2 !border-[#d4a44f]'
+    // 클릭 후 아직 저장하지 않은 변경분은 #1E1840 테두리로 표시한다.
+    if (hasUnsavedSelectionChange) {
+      base = 'bg-white border-2 border-[#1E1840] text-gray-700 cursor-pointer'
     }
 
-    return `${base} hover:border-[#F4928A]/40`
+    // 5명 전원 투표한 날짜는 연보라 테두리(#C4C2D9) + 그림자로 강조한다.
+    if (isAllVoted) {
+      base += ' !border-2 !border-[#C4C2D9] shadow-[0_0_0_3px_rgba(196,194,217,0.44),0_10px_20px_rgba(30,24,64,0.22)]'
+    }
+
+    return `${base} hover:brightness-[0.98]`
   }
 
   return (
@@ -240,7 +277,7 @@ export default function AvailabilityPage() {
               onClick={() => { setFixMode(!fixMode); setFixDates([]) }}
               className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                 fixMode
-                  ? 'bg-[#F4928A] text-white hover:brightness-95'
+                  ? 'bg-[#7466C5] text-white hover:brightness-95'
                   : 'bg-white border border-gray-300 text-gray-700 hover:bg-gray-50'
               }`}
             >
@@ -304,10 +341,18 @@ export default function AvailabilityPage() {
             return (
               <button
                 key={day}
-                onClick={() => toggleDate(day)}
-              className={`relative aspect-square rounded-xl border text-sm font-medium transition-all ${getCellStyle(day)}`}
+                type="button"
+                onClick={() => {
+                  const ds = formatDate(year, month, day)
+                  if (confirmedDates.has(ds)) {
+                    navigateFromConfirmedDate(ds)
+                    return
+                  }
+                  toggleDate(day)
+                }}
+                className={`relative aspect-square rounded-xl border text-sm font-medium transition-all ${getCellStyle(day)}`}
               >
-                <span className={`absolute top-1.5 left-1/2 -translate-x-1/2 ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'px-1.5 py-0.5 rounded-md bg-orange-100 text-orange-700 font-bold !text-orange-700' : ''}`}>
+                <span className={`absolute top-1.5 left-1/2 -translate-x-1/2 text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${isToday ? 'font-bold underline decoration-2 underline-offset-2 decoration-gray-900' : ''}`}>
                   {day}
                 </span>
                 {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
@@ -323,11 +368,6 @@ export default function AvailabilityPage() {
                       />
                     ))}
                   </div>
-                )}
-                {confirmedDates.has(dateStr) && !fixMode && (
-                  <span className="absolute bottom-1 left-1/2 -translate-x-1/2 px-2.5 py-1 rounded-full bg-amber-500 text-xs font-semibold leading-none text-white">
-                    확정
-                  </span>
                 )}
                 {fixMode && info && (
                   <span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] font-bold">

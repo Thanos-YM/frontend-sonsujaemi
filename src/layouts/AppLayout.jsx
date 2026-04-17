@@ -5,7 +5,7 @@ import useAuthStore from '../stores/useAuthStore'
 
 const navItems = [
   { to: '/availability', label: '일정 조율', icon: Calendar },
-  { to: '/trips', label: '여행 관리', icon: Map },
+  { to: '/trips', label: '여행', icon: Map },
   { to: '/archive', label: '기록', icon: BookOpen },
 ]
 
@@ -42,8 +42,8 @@ export default function AppLayout() {
                 className={({ isActive }) =>
                   `flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                     isActive
-                      ? 'bg-[#F4928A]/15 text-[#F4928A]'
-                      : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                      ? 'bg-gray-100 text-black'
+                      : 'text-gray-400 hover:text-gray-500'
                   }`
                 }
               >

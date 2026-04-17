@@ -275,7 +275,7 @@ export default function TripDetailPage() {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <h2 className="text-xl font-bold text-gray-900">{trip.title}</h2>
-                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-[#F4928A]/15 text-[#F4928A]' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${trip.status === 'UPCOMING' ? 'bg-[#A299D8]/20 text-[#A299D8]' : trip.status === 'CANCELLED' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
                   {trip.status === 'UPCOMING' ? '예정' : trip.status === 'CANCELLED' ? '취소' : '완료'}
                 </span>
               </div>
@@ -340,7 +340,7 @@ export default function TripDetailPage() {
                 setKakaoResults([])
                 setShowAddItem(true)
               }}
-              className="px-3 py-1 bg-[#F4928A] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors"
+              className="px-3 py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors"
             >
               + 추가
             </button>
@@ -348,7 +348,7 @@ export default function TripDetailPage() {
         </div>
         <div className="flex gap-1 mb-3">
           {CATEGORIES.map((c) => (
-            <button key={c.label} onClick={() => setCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${category === c.value ? 'bg-[#F4928A]/15 text-[#F4928A]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+            <button key={c.label} onClick={() => setCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${category === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
           ))}
         </div>
         {items.length === 0 ? (

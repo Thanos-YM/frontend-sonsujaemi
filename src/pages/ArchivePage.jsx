@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, MapPin, Calendar, ChevronRight } from 'lucide-react'
 import useArchiveStore from '../stores/useArchiveStore'
+import { FOOD_CATEGORIES } from '../constants/foodCategories'
 
 const PLACE_CATEGORIES = [
   { value: undefined, label: '전체' },
@@ -24,6 +25,7 @@ const STATUS_LABELS = {
 export default function ArchivePage() {
   const [tab, setTab] = useState('trips')
   const [placeCategory, setPlaceCategory] = useState(undefined)
+  const [foodCategory, setFoodCategory] = useState(undefined)
   const [sort, setSort] = useState('rating')
   const { places, tripRecords, fetchPlaces, fetchTripRecords, loading } = useArchiveStore()
   const navigate = useNavigate()
@@ -32,6 +34,27 @@ export default function ArchivePage() {
     if (tab === 'places') fetchPlaces(placeCategory, sort)
     else fetchTripRecords()
   }, [tab, placeCategory, sort, fetchPlaces, fetchTripRecords])
+
+  useEffect(() => {
+    if (placeCategory !== 'FOOD') {
+      setFoodCategory(undefined)
+    }
+  }, [placeCategory])
+
+  const foodFilters = useMemo(
+    () => [
+      { value: undefined, label: '전체' },
+      ...FOOD_CATEGORIES.filter((c) => c.value).map((c) => ({ value: c.value, label: c.label })),
+    ],
+    [],
+  )
+
+  const visiblePlaces = useMemo(() => {
+    if (placeCategory === 'FOOD' && foodCategory) {
+      return places.filter((p) => p.foodCategory === foodCategory)
+    }
+    return places
+  }, [places, placeCategory, foodCategory])
 
   return (
     <div className="space-y-4">
@@ -47,7 +70,7 @@ export default function ArchivePage() {
           <div className="flex items-center justify-between">
             <div className="flex gap-1">
               {PLACE_CATEGORIES.map((c) => (
-                <button key={c.label} onClick={() => setPlaceCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${placeCategory === c.value ? 'bg-[#F4928A]/15 text-[#F4928A]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
+                <button key={c.label} onClick={() => setPlaceCategory(c.value)} className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${placeCategory === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}>{c.label}</button>
               ))}
             </div>
             <select value={sort} onChange={(e) => setSort(e.target.value)} className="text-xs border border-gray-200 rounded-lg px-2 py-1">
@@ -55,13 +78,27 @@ export default function ArchivePage() {
             </select>
           </div>
 
+          {placeCategory === 'FOOD' && (
+            <div className="flex gap-1 flex-wrap">
+              {foodFilters.map((c) => (
+                <button
+                  key={c.label}
+                  onClick={() => setFoodCategory(c.value)}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors ${foodCategory === c.value ? 'bg-[#A299D8]/20 text-[#A299D8]' : 'text-gray-500 hover:bg-gray-100'}`}
+                >
+                  {c.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" /></div>
-          ) : places.length === 0 ? (
+          ) : visiblePlaces.length === 0 ? (
             <p className="text-center py-12 text-gray-400">등록된 장소가 없습니다.</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {places.map((p) => (
+              {visiblePlaces.map((p) => (
                 <button key={p.id} onClick={() => navigate(`/archive/places/${p.id}`)} className="bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow text-left group">
                   <div className="flex items-start justify-between">
                     <div>
@@ -94,20 +131,30 @@ export default function ArchivePage() {
           <div className="space-y-3">
             {tripRecords.map((t) => {
               const s = STATUS_LABELS[t.status]
+              const isCancelled = t.status === 'CANCELLED'
               return (
-                <button key={t.id} onClick={() => navigate(`/archive/trips/${t.id}`)} className="w-full bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow text-left flex items-center justify-between group">
+                <button
+                  key={t.id}
+                  onClick={() => navigate(`/archive/trips/${t.id}`)}
+                  className={`w-full bg-white rounded-xl border border-gray-200 p-4 hover:shadow-md transition-shadow text-left flex items-center justify-between group ${
+                    isCancelled ? 'border-l-4 border-l-red-500' : ''
+                  }`}
+                >
                   <div className="space-y-1.5">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-gray-900">{t.title}</h3>
+                      <h3 className={`font-semibold ${isCancelled ? 'text-gray-500 line-through decoration-red-500' : 'text-gray-900'}`}>{t.title}</h3>
                       <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${s?.color}`}>{s?.label}</span>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-gray-500">
+                    <div className={`flex items-center gap-3 text-sm ${isCancelled ? 'text-gray-400 line-through decoration-red-500' : 'text-gray-500'}`}>
                       <span className="flex items-center gap-1"><Calendar size={13} />{t.startDate} ~ {t.endDate}</span>
                       {t.region && <span className="flex items-center gap-1"><MapPin size={13} />{t.region}</span>}
                     </div>
+                    {isCancelled && t.cancelReason && (
+                      <p className="text-sm text-red-500 font-medium">취소 사유: {t.cancelReason}</p>
+                    )}
                     <div className="flex items-center gap-3 text-xs text-gray-400">
                       {t.averageRating && <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" />{t.averageRating}</span>}
-                      <span>후기 {t.reviewCount}건</span>
+                      {!isCancelled && <span>후기 {t.reviewCount}건</span>}
                     </div>
                   </div>
                   <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-500" />

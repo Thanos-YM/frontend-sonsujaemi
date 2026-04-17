@@ -1,53 +1,41 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { MapPin, Calendar, ChevronRight } from 'lucide-react'
 import useTripStore from '../stores/useTripStore'
 
 const STATUS_LABELS = {
-  UPCOMING: { label: '예정', color: 'bg-[#F4928A]/15 text-[#F4928A]' },
+  UPCOMING: { label: '예정', color: 'bg-[#A299D8]/20 text-[#A299D8]' },
   COMPLETED: { label: '완료', color: 'bg-green-100 text-green-700' },
   CANCELLED: { label: '취소', color: 'bg-red-100 text-red-700' },
 }
 
-const FILTERS = [
-  { value: null, label: '전체' },
-  { value: 'UPCOMING', label: '예정' },
-  { value: 'CANCELLED', label: '취소' },
-]
-
 export default function TripsPage() {
   const { trips, fetchTrips, loading } = useTripStore()
-  const [filter, setFilter] = useState(null)
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchTrips(filter)
-  }, [filter, fetchTrips])
+    fetchTrips('UPCOMING')
+  }, [fetchTrips])
 
   return (
     <div className="space-y-4">
-      <h1 className="text-xl font-bold text-gray-900">여행 관리</h1>
-
-      <div className="flex gap-1 bg-gray-100 p-1 rounded-lg w-fit">
-        {FILTERS.map((f) => (
-          <button
-            key={f.label}
-            onClick={() => setFilter(f.value)}
-            className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              filter === f.value ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500 hover:text-gray-700'
-            }`}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      <h1 className="text-xl font-bold text-gray-900">여행</h1>
 
       {loading ? (
         <div className="flex justify-center py-12">
           <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#F4928A] border-t-transparent" />
         </div>
       ) : trips.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">여행이 없습니다.</div>
+        <div className="text-center py-14 px-4 space-y-5">
+          <p className="text-gray-500 text-sm">예정된 일정이 없습니다.</p>
+          <button
+            type="button"
+            onClick={() => navigate('/availability')}
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[#F4928A] hover:bg-[#e07a6f] shadow-sm transition-colors"
+          >
+            여행을 계획해보세요
+          </button>
+        </div>
       ) : (
         <div className="space-y-3">
           {trips.map((trip) => {
@@ -77,9 +65,6 @@ export default function TripsPage() {
                       </span>
                     )}
                   </div>
-                  {trip.status === 'CANCELLED' && trip.cancelReason && (
-                    <p className="text-xs text-red-500">취소 사유: {trip.cancelReason}</p>
-                  )}
                 </div>
                 <ChevronRight size={18} className="text-gray-300 group-hover:text-gray-500 transition-colors" />
               </button>
