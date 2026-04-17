@@ -376,7 +376,7 @@ export default function AvailabilityPage() {
                   {day}
                 </span>
                 {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
-                  <div className="absolute left-1/2 top-[60%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
+                  <div className="absolute left-1/2 top-[70%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
                     {/* 800px 미만: 3개 + 2개 (2행), 800px 이상: 1행 5열 */}
                     <div className="flex flex-col items-center gap-0.5 min-[475px]:gap-1 min-[800px]:hidden">
                       <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(0, 3).map(voteDot)}</div>
