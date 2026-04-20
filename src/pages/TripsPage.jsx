@@ -31,7 +31,7 @@ export default function TripsPage() {
           <button
             type="button"
             onClick={() => navigate('/availability')}
-            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[#F4928A] hover:bg-[#e07a6f] shadow-sm transition-colors"
+            className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[#7466C5] hover:brightness-95 shadow-sm transition-colors"
           >
             여행을 계획해보세요
           </button>

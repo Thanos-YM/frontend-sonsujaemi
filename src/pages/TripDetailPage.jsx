@@ -267,7 +267,7 @@ export default function TripDetailPage() {
               <input value={infoForm.title} onChange={(e) => setInfoForm({ ...infoForm, title: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="여행 제목" />
               <input value={infoForm.region} onChange={(e) => setInfoForm({ ...infoForm, region: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="지역" />
               <div className="flex gap-2">
-                <button onClick={handleSaveInfo} className="px-3 py-1.5 bg-[#F4928A] text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
+                <button onClick={handleSaveInfo} className="px-3 py-1.5 bg-[#7466C5] text-white rounded-lg text-xs"><Check size={12} className="inline mr-1" />저장</button>
                 <button onClick={() => setEditInfo(false)} className="px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs"><X size={12} className="inline mr-1" />취소</button>
               </div>
             </div>
@@ -568,7 +568,7 @@ export default function TripDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
             <input value={itemForm.externalLink} onChange={(e) => setItemForm({ ...itemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
           </div>
-          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
+          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
         </div>
       </Modal>
 
@@ -620,7 +620,7 @@ export default function TripDetailPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
               <input value={editItemForm.externalLink} onChange={(e) => setEditItemForm({ ...editItemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
             </div>
-            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#F4928A] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
+            <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
           </div>
         )}
       </Modal>
@@ -633,7 +633,7 @@ export default function TripDetailPage() {
             <label className="block text-sm font-medium text-gray-700 mb-1">취소 사유 *</label>
             <textarea value={cancelReason} onChange={(e) => setCancelReason(e.target.value)} rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="취소 사유를 입력하세요" />
           </div>
-          <button onClick={handleCancel} disabled={!cancelReason.trim()} className="w-full py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 disabled:opacity-50 transition-colors text-sm">취소하기</button>
+          <button onClick={handleCancel} disabled={!cancelReason.trim()} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">취소하기</button>
         </div>
       </Modal>
     </div>

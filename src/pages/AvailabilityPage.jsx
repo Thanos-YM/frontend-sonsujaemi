@@ -49,10 +49,11 @@ export default function AvailabilityPage() {
         getTrips('UPCOMING'),
         getTrips('COMPLETED'),
       ])
-      setConfirmedTrips([
+      const activeTrips = [
         ...(upcomingRes.data.data || []),
         ...(completedRes.data.data || []),
-      ])
+      ].filter((trip) => trip?.status === 'UPCOMING' || trip?.status === 'COMPLETED')
+      setConfirmedTrips(activeTrips)
     } catch {
       // no-op
     }
@@ -312,7 +313,8 @@ export default function AvailabilityPage() {
         type="button"
         onClick={() => {
           const ds = formatDate(year, month, day)
-          if (confirmedDates.has(ds)) {
+          const trip = findTripContainingDate(ds)
+          if (trip) {
             navigateFromConfirmedDate(ds)
             return
           }
@@ -360,7 +362,7 @@ export default function AvailabilityPage() {
     const voteDot = (slot) => (
       <div
         key={slot.reactKey}
-        className="aspect-square w-2 min-[475px]:w-3 min-[800px]:w-4 shrink-0 rounded-sm border-2 border-solid box-border"
+        className="w-2 h-2 min-[475px]:w-3 min-[475px]:h-3 min-[800px]:w-4 min-[800px]:h-4 shrink-0 rounded-full border-2 border-solid box-border"
         style={{
           borderColor: slot.borderColor,
           backgroundColor: slot.filled ? slot.fillColor : 'transparent',
@@ -373,7 +375,8 @@ export default function AvailabilityPage() {
         type="button"
         onClick={() => {
           const ds = formatDate(year, month, day)
-          if (confirmedDates.has(ds)) {
+          const trip = findTripContainingDate(ds)
+          if (trip) {
             navigateFromConfirmedDate(ds)
             return
           }
@@ -423,7 +426,7 @@ export default function AvailabilityPage() {
               }`}
             >
               <Lock size={14} className="inline mr-1" />
-              {fixMode ? 'Fix 모드 ON' : '일정 Fix'}
+              {fixMode ? (fixDates.length > 0 ? 'Fix 모드 OFF' : 'Fix 모드 ON') : '일정 Fix'}
             </button>
           )}
           {!fixMode && dirty && (
