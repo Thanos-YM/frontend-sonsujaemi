@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, Fragment } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Lock } from 'lucide-react'
 import useAvailabilityStore from '../stores/useAvailabilityStore'
@@ -104,12 +104,16 @@ export default function AvailabilityPage() {
   const { firstDay, daysInMonth } = getDaysInMonth(year, month)
 
   const prevMonth = () => {
-    if (month === 1) { setYear(year - 1); setMonth(12) }
-    else setMonth(month - 1)
+    if (month === 1) {
+      setYear(year - 1)
+      setMonth(12)
+    } else setMonth(month - 1)
   }
   const nextMonth = () => {
-    if (month === 12) { setYear(year + 1); setMonth(1) }
-    else setMonth(month + 1)
+    if (month === 12) {
+      setYear(year + 1)
+      setMonth(1)
+    } else setMonth(month + 1)
   }
 
   const isPast = (day) => {
@@ -267,6 +271,143 @@ export default function AvailabilityPage() {
     return `${base} hover:brightness-[0.98]`
   }
 
+  /** 모바일: 세로 리스트 한 줄(요일 + 일 + 투표). 그리드와 동일 로직. */
+  const renderDayListRow = (day) => {
+    const dateStr = formatDate(year, month, day)
+    const info = availabilityMap[dateStr]
+    const dayOfWeek = new Date(year, month - 1, day).getDay()
+    const isToday = dateStr === todayStr
+    const isConfirmed = confirmedDates.has(dateStr)
+    const voteSlots = getFixedAvailabilitySlots(info?.availableUsers)
+    const wkColor = isConfirmed
+      ? 'text-white/90'
+      : dayOfWeek === 0
+        ? 'text-red-500'
+        : dayOfWeek === 6
+          ? 'text-blue-500'
+          : 'text-gray-500'
+    const numColor = isConfirmed
+      ? 'text-white'
+      : selectedDates.has(dateStr) || fixDates.includes(dateStr)
+        ? 'text-gray-900'
+        : dayOfWeek === 0
+          ? 'text-red-400'
+          : dayOfWeek === 6
+            ? 'text-blue-400'
+            : 'text-gray-800'
+
+    const voteDot = (slot) => (
+      <div
+        key={slot.reactKey}
+        className="aspect-square w-full min-h-0 rounded-sm border-2 border-solid box-border"
+        style={{
+          borderColor: slot.borderColor,
+          backgroundColor: slot.filled ? slot.fillColor : 'transparent',
+        }}
+      />
+    )
+
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          const ds = formatDate(year, month, day)
+          if (confirmedDates.has(ds)) {
+            navigateFromConfirmedDate(ds)
+            return
+          }
+          toggleDate(day)
+        }}
+        className={`relative w-full flex items-stretch gap-3 rounded-2xl border px-3 py-2.5 text-left shadow-sm transition-all touch-manipulation active:scale-[0.99] ${getCellStyle(day)}`}
+      >
+        <div
+          className={`flex min-h-[3.25rem] w-[3.25rem] shrink-0 flex-col items-center justify-center rounded-xl border border-black/[0.06] py-1 ${isConfirmed ? 'bg-white/10' : 'bg-black/[0.04]'}`}
+        >
+          <span className={`text-[10px] font-semibold leading-none ${wkColor}`}>{WEEKDAYS[dayOfWeek]}</span>
+          <span
+            className={`mt-0.5 text-xl font-bold leading-none tabular-nums ${numColor} ${
+              isToday ? `underline decoration-2 underline-offset-2 ${isConfirmed ? 'decoration-white' : 'decoration-gray-900'}` : ''
+            }`}
+          >
+            {day}
+          </span>
+          {isToday && (
+            <span className={`mt-0.5 text-[9px] font-semibold leading-none ${isConfirmed ? 'text-white/80' : 'text-[#7466C5]'}`}>
+              오늘
+            </span>
+          )}
+        </div>
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-1.5">
+          {!fixMode && (!isPast(day) || isConfirmed) && (
+            <div className="grid w-full grid-cols-5 gap-1">{voteSlots.map(voteDot)}</div>
+          )}
+          {fixMode && info && (
+            <div className="flex justify-end">
+              <span className="rounded-lg bg-black/10 px-2 py-0.5 text-sm font-bold tabular-nums">{info.count}명</span>
+            </div>
+          )}
+        </div>
+      </button>
+    )
+  }
+
+  const renderDayCell = (day) => {
+    const dateStr = formatDate(year, month, day)
+    const info = availabilityMap[dateStr]
+    const dayOfWeek = new Date(year, month - 1, day).getDay()
+    const isToday = dateStr === todayStr
+    const voteSlots = getFixedAvailabilitySlots(info?.availableUsers)
+    const voteDot = (slot) => (
+      <div
+        key={slot.reactKey}
+        className="aspect-square w-2 min-[475px]:w-3 min-[800px]:w-4 shrink-0 rounded-sm border-2 border-solid box-border"
+        style={{
+          borderColor: slot.borderColor,
+          backgroundColor: slot.filled ? slot.fillColor : 'transparent',
+        }}
+      />
+    )
+
+    return (
+      <button
+        type="button"
+        onClick={() => {
+          const ds = formatDate(year, month, day)
+          if (confirmedDates.has(ds)) {
+            navigateFromConfirmedDate(ds)
+            return
+          }
+          toggleDate(day)
+        }}
+        className={`relative aspect-square min-h-[2.75rem] max-[399px]:min-h-[3.5rem] sm:min-h-0 rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium transition-all touch-manipulation ${getCellStyle(day)}`}
+      >
+        <span
+          className={`absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 text-sm sm:text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${
+            isToday
+              ? `font-bold underline decoration-2 underline-offset-2 max-[399px]:underline-offset-1 ${confirmedDates.has(dateStr) ? 'decoration-white' : 'decoration-gray-900'}`
+              : ''
+          }`}
+        >
+          {day}
+        </span>
+        {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
+          <div className="absolute left-1/2 top-[79%] min-[400px]:top-[70%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
+            <div className="flex flex-col items-center gap-0.5 min-[475px]:gap-1 min-[800px]:hidden">
+              <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(0, 3).map(voteDot)}</div>
+              <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(3, 5).map(voteDot)}</div>
+            </div>
+            <div className="hidden min-[800px]:flex w-full items-center justify-between gap-px">{voteSlots.map(voteDot)}</div>
+          </div>
+        )}
+        {fixMode && info && (
+          <span className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold">
+            {info.count}
+          </span>
+        )}
+      </button>
+    )
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -328,77 +469,32 @@ export default function AvailabilityPage() {
           </button>
         </div>
 
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-0.5 sm:mb-1">
-          {WEEKDAYS.map((d, i) => (
-            <div key={d} className={`text-center text-[10px] sm:text-xs font-medium py-0.5 sm:py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
-              {d}
-            </div>
-          ))}
-        </div>
-
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-          {Array.from({ length: firstDay }, (_, i) => (
-            <div key={`empty-${i}`} />
-          ))}
+        {/* 좁은 폭(≈400px @ 16px root): 일자 카드 세로 — min-[25.01rem] 이상은 월 그리드 */}
+        <div className="flex flex-col gap-3 pb-1 pt-0.5 min-[25.01rem]:hidden">
           {Array.from({ length: daysInMonth }, (_, i) => {
             const day = i + 1
-            const dateStr = formatDate(year, month, day)
-            const info = availabilityMap[dateStr]
-            const dayOfWeek = new Date(year, month - 1, day).getDay()
-            const isToday = dateStr === todayStr
-            const voteSlots = getFixedAvailabilitySlots(info?.availableUsers)
-            const voteDot = (slot) => (
-              <div
-                key={slot.reactKey}
-                className="w-2 h-2 min-[475px]:w-3 min-[475px]:h-3 min-[800px]:w-4 min-[800px]:h-4 shrink-0 rounded-full border-2 border-solid box-border"
-                style={{
-                  borderColor: slot.borderColor,
-                  backgroundColor: slot.filled ? slot.fillColor : 'transparent',
-                }}
-              />
-            )
-
-            return (
-              <button
-                key={day}
-                type="button"
-                onClick={() => {
-                  const ds = formatDate(year, month, day)
-                  if (confirmedDates.has(ds)) {
-                    navigateFromConfirmedDate(ds)
-                    return
-                  }
-                  toggleDate(day)
-                }}
-                className={`relative aspect-square min-h-[2.75rem] max-[399px]:min-h-[3.5rem] sm:min-h-0 rounded-lg sm:rounded-xl border text-xs sm:text-sm font-medium transition-all touch-manipulation ${getCellStyle(day)}`}
-              >
-                <span
-                  className={`absolute top-1 sm:top-1.5 left-1/2 -translate-x-1/2 text-sm sm:text-[16px] leading-none ${dayOfWeek === 0 ? 'text-red-400' : dayOfWeek === 6 ? 'text-blue-400' : ''} ${selectedDates.has(dateStr) || fixDates.includes(dateStr) || confirmedDates.has(dateStr) ? '!text-inherit' : ''} ${
-                    isToday
-                      ? `font-bold underline decoration-2 underline-offset-2 max-[399px]:underline-offset-1 ${confirmedDates.has(dateStr) ? 'decoration-white' : 'decoration-gray-900'}`
-                      : ''
-                  }`}
-                >
-                  {day}
-                </span>
-                {!fixMode && (!isPast(day) || confirmedDates.has(dateStr)) && (
-                  <div className="absolute left-1/2 top-[79%] min-[400px]:top-[70%] min-[800px]:top-[56%] -translate-x-1/2 -translate-y-1/2 w-[88%]">
-                    {/* 800px 미만: 3개 + 2개 (2행), 800px 이상: 1행 5열 */}
-                    <div className="flex flex-col items-center gap-0.5 min-[475px]:gap-1 min-[800px]:hidden">
-                      <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(0, 3).map(voteDot)}</div>
-                      <div className="flex justify-center gap-0.5 min-[475px]:gap-1">{voteSlots.slice(3, 5).map(voteDot)}</div>
-                    </div>
-                    <div className="hidden min-[800px]:flex w-full items-center justify-between gap-px">{voteSlots.map(voteDot)}</div>
-                  </div>
-                )}
-                {fixMode && info && (
-                  <span className="absolute bottom-1 sm:bottom-2 left-1/2 -translate-x-1/2 text-[9px] sm:text-[10px] font-bold">
-                    {info.count}
-                  </span>
-                )}
-              </button>
-            )
+            return <Fragment key={day}>{renderDayListRow(day)}</Fragment>
           })}
+        </div>
+
+        {/* min 25.01rem(≈400px) 이상: 월 전체 그리드 */}
+        <div className="hidden min-[25.01rem]:block">
+          <div className="grid grid-cols-7 gap-1 mb-1">
+            {WEEKDAYS.map((d, i) => (
+              <div key={d} className={`text-center text-xs font-medium py-1 ${i === 0 ? 'text-red-400' : i === 6 ? 'text-blue-400' : 'text-gray-400'}`}>
+                {d}
+              </div>
+            ))}
+          </div>
+          <div className="grid grid-cols-7 gap-1">
+            {Array.from({ length: firstDay }, (_, i) => (
+              <div key={`empty-${i}`} />
+            ))}
+            {Array.from({ length: daysInMonth }, (_, i) => {
+              const day = i + 1
+              return <Fragment key={day}>{renderDayCell(day)}</Fragment>
+            })}
+          </div>
         </div>
       </div>
 

@@ -26,7 +26,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-[#F8F7FC] to-[#A299D8]/12 px-4 py-8 pb-safe">
+    <div className="min-h-screen min-h-[100dvh] flex items-center justify-center bg-gradient-to-br from-white via-[#F8F7FC] to-[#A299D8]/12 px-fluid-md py-fluid-lg pb-safe">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl mb-4 bg-white/70 shadow-sm border border-[#A299D8]/35">
@@ -36,36 +36,36 @@ export default function LoginPage() {
               className="w-14 h-14 object-contain"
             />
           </div>
-          <h1 className="text-2xl font-bold text-gray-900">손수재미</h1>
-          <p className="text-sm text-gray-500 mt-1">일정관리</p>
+          <h1 className="text-fluid-3xl font-bold text-gray-900">손수재미</h1>
+          <p className="text-fluid-sm text-gray-500 mt-1">일정관리</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-fluid-md space-y-fluid-sm">
           {error && (
-            <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-lg">
+            <div className="bg-red-50 text-red-600 text-fluid-sm px-fluid-sm py-2 rounded-lg">
               {error}
             </div>
           )}
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">아이디</label>
+            <label className="block text-fluid-sm font-medium text-gray-700 mb-1">아이디</label>
             <input
               type="text"
               value={loginId}
               onChange={(e) => setLoginId(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-sm"
+              className="w-full px-fluid-sm py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-fluid-sm"
               placeholder="아이디를 입력하세요"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">비밀번호</label>
+            <label className="block text-fluid-sm font-medium text-gray-700 mb-1">비밀번호</label>
             <input
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-sm"
+              className="w-full px-fluid-sm py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#A299D8]/45 focus:border-[#7466C5] outline-none transition-shadow text-fluid-sm"
               placeholder="비밀번호를 입력하세요"
               required
             />
@@ -74,7 +74,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center gap-2 bg-[#7466C5] text-white py-2.5 rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm"
+            className="w-full flex items-center justify-center gap-2 bg-[#7466C5] text-white py-2.5 rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-fluid-sm"
           >
             <LogIn size={16} />
             {loading ? '로그인 중...' : '로그인'}
