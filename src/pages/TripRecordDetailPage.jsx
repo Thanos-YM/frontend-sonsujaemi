@@ -9,6 +9,24 @@ import * as tripsApi from '../api/trips'
 import * as planItemsApi from '../api/planItems'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 import { FOOD_CATEGORIES } from '../constants/foodCategories'
+import { searchKakaoPlaces } from '../api/places'
+
+const emptyItemForm = () => ({
+  placeName: '',
+  category: 'FOOD',
+  address: '',
+  status: 'CANDIDATE',
+  note: '',
+  externalLink: '',
+  price: '',
+  menuItems: '',
+  nights: '',
+  foodCategory: '',
+  kakaoPlaceId: '',
+  latitude: null,
+  longitude: null,
+  placeUrl: '',
+})
 
 export default function TripRecordDetailPage() {
   const { tripId } = useParams()
@@ -26,6 +44,10 @@ export default function TripRecordDetailPage() {
   const [visitReviewItem, setVisitReviewItem] = useState(null)
   const [visitReviewForm, setVisitReviewForm] = useState({ rating: 5, content: '' })
   const [myVisitReviews, setMyVisitReviews] = useState({})
+  const [showAddItem, setShowAddItem] = useState(false)
+  const [itemForm, setItemForm] = useState(emptyItemForm)
+  const [kakaoResults, setKakaoResults] = useState([])
+  const [kakaoLoading, setKakaoLoading] = useState(false)
 
   useEffect(() => { fetchTripRecordDetail(tripId) }, [tripId, fetchTripRecordDetail])
 
@@ -36,6 +58,27 @@ export default function TripRecordDetailPage() {
       if (mine) setReviewForm({ rating: mine.rating || 5, content: mine.content })
     }
   }, [record, user])
+
+  useEffect(() => {
+    if (!showAddItem) return
+    const q = itemForm.placeName.trim()
+    if (q.length < 2) {
+      setKakaoResults([])
+      return
+    }
+    const timer = setTimeout(async () => {
+      setKakaoLoading(true)
+      try {
+        const res = await searchKakaoPlaces({ query: q, page: 1, size: 10 })
+        setKakaoResults(res.data.data || [])
+      } catch {
+        setKakaoResults([])
+      } finally {
+        setKakaoLoading(false)
+      }
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [itemForm.placeName, showAddItem])
 
   const handleSubmitReview = async () => {
     if (!reviewForm.content.trim()) return
@@ -80,6 +123,55 @@ export default function TripRecordDetailPage() {
       fetchTripRecordDetail(tripId)
     } catch (err) {
       alert(err.response?.data?.message || '수정 실패')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const selectKakaoPlace = (doc) => {
+    const addr = doc.roadAddressName || doc.addressName || ''
+    setItemForm((prev) => ({
+      ...prev,
+      placeName: doc.placeName || '',
+      address: addr,
+      kakaoPlaceId: doc.id || '',
+      latitude: doc.latitude ?? null,
+      longitude: doc.longitude ?? null,
+      placeUrl: doc.placeUrl || '',
+    }))
+    setKakaoResults([])
+  }
+
+  const handleAddItem = async () => {
+    if (!itemForm.placeName.trim() || !itemForm.address.trim() || submitting) return
+    setSubmitting(true)
+    try {
+      const payload = {
+        placeName: itemForm.placeName.trim(),
+        category: itemForm.category,
+        address: itemForm.address.trim(),
+        status: itemForm.status,
+        note: itemForm.note || null,
+        externalLink: itemForm.externalLink || null,
+        price: parsePriceToNumber(itemForm.price),
+        nights: itemForm.nights ? Number(itemForm.nights) : null,
+        menuItems: itemForm.menuItems || null,
+        foodCategory: itemForm.category === 'FOOD' ? (itemForm.foodCategory || null) : null,
+      }
+      if (itemForm.kakaoPlaceId) {
+        payload.kakaoPlaceId = itemForm.kakaoPlaceId
+        if (itemForm.latitude != null) payload.latitude = itemForm.latitude
+        if (itemForm.longitude != null) payload.longitude = itemForm.longitude
+        if (itemForm.placeUrl) payload.placeUrl = itemForm.placeUrl
+      }
+
+      await planItemsApi.createPlanItem(tripId, payload)
+      setShowAddItem(false)
+      setItemForm(emptyItemForm())
+      setKakaoResults([])
+      fetchTripRecordDetail(tripId)
+    } catch (err) {
+      alert(err.response?.data?.message || '추가 실패')
     } finally {
       setSubmitting(false)
     }
@@ -171,9 +263,24 @@ export default function TripRecordDetailPage() {
       </div>
 
       {/* 계획 항목 */}
-      {record.planItems?.length > 0 && (
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
-          <h3 className="text-sm font-semibold text-gray-700 mb-3">계획 항목</h3>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-3">
+          <h3 className="text-sm font-semibold text-gray-700">계획 항목</h3>
+          {isCompleted && (
+            <button
+              type="button"
+              onClick={() => {
+                setItemForm(emptyItemForm())
+                setKakaoResults([])
+                setShowAddItem(true)
+              }}
+              className="self-start sm:self-auto px-3 py-1.5 sm:py-1 bg-[#7466C5] text-white rounded-lg text-xs font-medium hover:brightness-95 transition-colors touch-manipulation"
+            >
+              + 추가
+            </button>
+          )}
+        </div>
+        {(record.planItems?.length || 0) > 0 ? (
           <div className="space-y-2">
             {record.planItems.map((item) => {
               const isExpanded = expandedItemId === item.id
@@ -240,8 +347,10 @@ export default function TripRecordDetailPage() {
               )
             })}
           </div>
-        </div>
-      )}
+        ) : (
+          <p className="text-sm text-gray-400 py-2">등록된 항목이 없습니다.</p>
+        )}
+      </div>
 
       {/* 여행 총평 */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
@@ -369,6 +478,141 @@ export default function TripRecordDetailPage() {
             <button onClick={handleEditItem} disabled={submitting} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '저장 중...' : '저장'}</button>
           </div>
         )}
+      </Modal>
+
+      {/* 항목 추가 모달 */}
+      <Modal open={showAddItem} onClose={() => { setShowAddItem(false); setKakaoResults([]) }} title="계획 항목 추가">
+        <div className="space-y-3">
+          <div className="relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">장소명 *</label>
+            <input
+              value={itemForm.placeName}
+              onChange={(e) => {
+                const v = e.target.value
+                setItemForm((prev) => ({
+                  ...prev,
+                  placeName: v,
+                  ...(prev.kakaoPlaceId
+                    ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                    : {}),
+                }))
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              autoComplete="off"
+            />
+            {kakaoLoading && <p className="text-xs text-gray-400 mt-1">장소 검색 중…</p>}
+            {kakaoResults.length > 0 && (
+              <ul className="absolute z-50 left-0 right-0 mt-1 max-h-48 overflow-y-auto rounded-lg border border-gray-200 bg-white shadow-lg text-sm">
+                {kakaoResults.map((doc) => (
+                  <li key={doc.id}>
+                    <button
+                      type="button"
+                      className="w-full text-left px-3 py-2 hover:bg-[#F4928A]/10 border-b border-gray-50 last:border-0"
+                      onClick={() => selectKakaoPlace(doc)}
+                    >
+                      <div className="font-medium text-gray-900">{doc.placeName}</div>
+                      <div className="text-xs text-gray-500 truncate">{doc.roadAddressName || doc.addressName || '주소 없음'}</div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">카테고리 *</label>
+              <select
+                value={itemForm.category}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setItemForm((prev) => ({
+                    ...prev,
+                    category: v,
+                    ...(prev.kakaoPlaceId
+                      ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                      : {}),
+                  }))
+                }}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="ACCOMMODATION">숙소</option>
+                <option value="FOOD">식당</option>
+                <option value="ACTIVITY">놀거리</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">상태</label>
+              <select value={itemForm.status} onChange={(e) => setItemForm({ ...itemForm, status: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                <option value="CANDIDATE">후보</option>
+                <option value="CONFIRMED">확정</option>
+                <option value="RESERVED">예약완료</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">주소 *</label>
+            <input
+              value={itemForm.address}
+              onChange={(e) => {
+                const v = e.target.value
+                setItemForm((prev) => ({
+                  ...prev,
+                  address: v,
+                  ...(prev.kakaoPlaceId
+                    ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
+                    : {}),
+                }))
+              }}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              placeholder="주소를 입력하세요"
+              autoComplete="street-address"
+            />
+            {itemForm.kakaoPlaceId ? (
+              <p className="text-xs text-emerald-600 mt-1">주소를 바꾸면 수동 입력으로 전환됩니다.</p>
+            ) : null}
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">가격</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              value={itemForm.price}
+              onChange={(e) => setItemForm({ ...itemForm, price: formatPriceInput(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              placeholder="원"
+            />
+          </div>
+          {itemForm.category === 'FOOD' && (
+            <>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">식당 대분류</label>
+                <select value={itemForm.foodCategory} onChange={(e) => setItemForm({ ...itemForm, foodCategory: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                  {FOOD_CATEGORIES.map((c) => <option key={c.label + c.value} value={c.value}>{c.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">주문한 메뉴</label>
+                <textarea value={itemForm.menuItems} onChange={(e) => setItemForm({ ...itemForm, menuItems: e.target.value })} rows={2} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm resize-none" placeholder="예: 삼겹살 2인분, 된장찌개 1개" />
+              </div>
+            </>
+          )}
+          {itemForm.category === 'ACCOMMODATION' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">숙박 일수</label>
+              <input type="number" min="1" value={itemForm.nights} onChange={(e) => setItemForm({ ...itemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
+            </div>
+          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
+            <input value={itemForm.note} onChange={(e) => setItemForm({ ...itemForm, note: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">외부 링크</label>
+            <input value={itemForm.externalLink} onChange={(e) => setItemForm({ ...itemForm, externalLink: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
+          </div>
+          <button onClick={handleAddItem} disabled={!itemForm.placeName.trim() || !itemForm.address.trim() || submitting} className="w-full py-2.5 bg-[#7466C5] text-white rounded-lg font-medium hover:brightness-95 disabled:opacity-50 transition-colors text-sm">{submitting ? '추가 중...' : '추가'}</button>
+        </div>
       </Modal>
 
       <Modal open={showReviewModal} onClose={() => setShowReviewModal(false)} title={myReview ? '총평 수정' : '총평 작성'}>
