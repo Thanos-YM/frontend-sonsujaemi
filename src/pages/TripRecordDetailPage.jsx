@@ -28,13 +28,19 @@ const emptyItemForm = () => ({
   placeUrl: '',
 })
 
+const clampRating = (value) => {
+  const n = Number(value)
+  if (Number.isNaN(n)) return 0
+  return Math.min(5, Math.max(0, n))
+}
+
 export default function TripRecordDetailPage() {
   const { tripId } = useParams()
   const navigate = useNavigate()
   const { tripRecordDetail: record, fetchTripRecordDetail, loading } = useArchiveStore()
   const { user } = useAuthStore()
   const [showReviewModal, setShowReviewModal] = useState(false)
-  const [reviewForm, setReviewForm] = useState({ rating: 5, content: '' })
+  const [reviewForm, setReviewForm] = useState({ rating: 5.0, content: '' })
   const [myReview, setMyReview] = useState(null)
   const [editItem, setEditItem] = useState(null)
   const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
@@ -42,7 +48,7 @@ export default function TripRecordDetailPage() {
   const [expandedItemId, setExpandedItemId] = useState(null)
   const [itemReviews, setItemReviews] = useState({})
   const [visitReviewItem, setVisitReviewItem] = useState(null)
-  const [visitReviewForm, setVisitReviewForm] = useState({ rating: 5, content: '' })
+  const [visitReviewForm, setVisitReviewForm] = useState({ rating: 5.0, content: '' })
   const [myVisitReviews, setMyVisitReviews] = useState({})
   const [showAddItem, setShowAddItem] = useState(false)
   const [itemForm, setItemForm] = useState(emptyItemForm)
@@ -55,7 +61,7 @@ export default function TripRecordDetailPage() {
     if (record?.reviews && user) {
       const mine = record.reviews.find((r) => r.user.id === user.id)
       setMyReview(mine || null)
-      if (mine) setReviewForm({ rating: mine.rating || 5, content: mine.content })
+      if (mine) setReviewForm({ rating: mine.rating ?? 5.0, content: mine.content })
     }
   }, [record, user])
 
@@ -200,7 +206,7 @@ export default function TripRecordDetailPage() {
     const mine = myVisitReviews[item.id]
     setVisitReviewItem(item)
     setVisitReviewForm({
-      rating: mine?.rating || 5,
+      rating: mine?.rating ?? 5.0,
       content: mine?.content || '',
     })
   }
@@ -257,7 +263,7 @@ export default function TripRecordDetailPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm text-gray-500">
           <span className="flex items-center gap-1 min-w-0"><Calendar size={13} className="shrink-0" /><span className="break-all">{record.startDate} ~ {record.endDate}</span></span>
           {record.region && <span className="flex items-center gap-1 min-w-0"><MapPin size={13} className="shrink-0" /><span className="break-words">{record.region}</span></span>}
-          {record.averageRating && <span className="flex items-center gap-1"><Star size={13} className="text-yellow-500 fill-yellow-500 shrink-0" />{record.averageRating}</span>}
+          {record.averageRating != null && <span className="flex items-center gap-1"><Star size={13} className="text-yellow-500 fill-yellow-500 shrink-0" />{record.averageRating.toFixed(1)}</span>}
         </div>
         {record.cancelReason && <p className="text-sm text-red-500 mt-2">취소 사유: {record.cancelReason}</p>}
       </div>
@@ -333,7 +339,7 @@ export default function TripRecordDetailPage() {
                               <div className="flex-1">
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-xs font-medium text-gray-700">{r.user.name}</span>
-                                  {r.rating && <span className="flex items-center gap-0.5 text-[10px] text-yellow-600"><Star size={9} className="fill-yellow-500 text-yellow-500" />{r.rating}</span>}
+                                  {r.rating != null && <span className="flex items-center gap-0.5 text-[10px] text-yellow-600"><Star size={9} className="fill-yellow-500 text-yellow-500" />{r.rating.toFixed(1)}</span>}
                                 </div>
                                 <p className="text-xs text-gray-600 mt-0.5">{r.content}</p>
                               </div>
@@ -370,7 +376,7 @@ export default function TripRecordDetailPage() {
                 <div className="flex-1">
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium text-gray-700">{r.user.name}</span>
-                    {r.rating && <span className="flex items-center gap-0.5 text-xs text-yellow-600"><Star size={10} className="fill-yellow-500 text-yellow-500" />{r.rating}</span>}
+                    {r.rating != null && <span className="flex items-center gap-0.5 text-xs text-yellow-600"><Star size={10} className="fill-yellow-500 text-yellow-500" />{r.rating.toFixed(1)}</span>}
                   </div>
                   <p className="text-sm text-gray-600 mt-0.5">{r.content}</p>
                 </div>
@@ -408,13 +414,16 @@ export default function TripRecordDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">별점</label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} onClick={() => setVisitReviewForm({ ...visitReviewForm, rating: n })}>
-                    <Star size={24} className={n <= visitReviewForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
-                  </button>
-                ))}
-              </div>
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
+                value={visitReviewForm.rating}
+                onChange={(e) => setVisitReviewForm({ ...visitReviewForm, rating: clampRating(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1">0.0 ~ 5.0 (0.1 단위)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>
@@ -619,13 +628,16 @@ export default function TripRecordDetailPage() {
         <div className="space-y-3">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">별점</label>
-            <div className="flex gap-1">
-              {[1, 2, 3, 4, 5].map((n) => (
-                <button key={n} onClick={() => setReviewForm({ ...reviewForm, rating: n })}>
-                  <Star size={24} className={n <= reviewForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
-                </button>
-              ))}
-            </div>
+            <input
+              type="number"
+              min="0"
+              max="5"
+              step="0.1"
+              value={reviewForm.rating}
+              onChange={(e) => setReviewForm({ ...reviewForm, rating: clampRating(e.target.value) })}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+            />
+            <p className="text-xs text-gray-400 mt-1">0.0 ~ 5.0 (0.1 단위)</p>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>

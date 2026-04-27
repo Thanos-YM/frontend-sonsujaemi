@@ -7,13 +7,19 @@ import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
 import * as planItemsApi from '../api/planItems'
 
+const clampRating = (value) => {
+  const n = Number(value)
+  if (Number.isNaN(n)) return 0
+  return Math.min(5, Math.max(0, n))
+}
+
 export default function PlaceDetailPage() {
   const { placeId } = useParams()
   const navigate = useNavigate()
   const { placeDetail: place, fetchPlaceDetail, updatePlaceArchiveNote, loading } = useArchiveStore()
   const { user } = useAuthStore()
   const [visitReviewItem, setVisitReviewItem] = useState(null)
-  const [visitReviewForm, setVisitReviewForm] = useState({ rating: 5, content: '' })
+  const [visitReviewForm, setVisitReviewForm] = useState({ rating: 5.0, content: '' })
   const [archiveDraft, setArchiveDraft] = useState('')
   const [archiveSaving, setArchiveSaving] = useState(false)
   const [editingArchive, setEditingArchive] = useState(false)
@@ -28,7 +34,7 @@ export default function PlaceDetailPage() {
     const mine = user ? visit.reviews?.find((r) => r.user.id === user.id) : null
     setVisitReviewItem(visit)
     setVisitReviewForm({
-      rating: mine?.rating || 5,
+      rating: mine?.rating ?? 5.0,
       content: mine?.content || '',
     })
   }
@@ -114,7 +120,7 @@ export default function PlaceDetailPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-4 pt-3 border-t border-gray-100 text-sm text-gray-600">
-          {place.averageRating && <span className="flex items-center gap-1"><Star size={14} className="text-yellow-500 fill-yellow-500" />{place.averageRating}</span>}
+          {place.averageRating != null && <span className="flex items-center gap-1"><Star size={14} className="text-yellow-500 fill-yellow-500" />{place.averageRating.toFixed(1)}</span>}
           <span>방문 {place.visitCount}회</span>
           <span>후기 {place.reviewCount}건</span>
         </div>
@@ -190,9 +196,9 @@ export default function PlaceDetailPage() {
                     <div className="flex-1">
                       <div className="flex items-center gap-1.5">
                         <span className="text-sm font-medium text-gray-700">{r.user.name}</span>
-                        {r.rating && (
+                        {r.rating != null && (
                           <span className="flex items-center gap-0.5 text-xs text-yellow-600">
-                            <Star size={10} className="fill-yellow-500 text-yellow-500" />{r.rating}
+                            <Star size={10} className="fill-yellow-500 text-yellow-500" />{r.rating.toFixed(1)}
                           </span>
                         )}
                       </div>
@@ -217,13 +223,16 @@ export default function PlaceDetailPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">별점</label>
-              <div className="flex gap-1">
-                {[1, 2, 3, 4, 5].map((n) => (
-                  <button key={n} type="button" onClick={() => setVisitReviewForm({ ...visitReviewForm, rating: n })}>
-                    <Star size={24} className={n <= visitReviewForm.rating ? 'text-yellow-500 fill-yellow-500' : 'text-gray-300'} />
-                  </button>
-                ))}
-              </div>
+              <input
+                type="number"
+                min="0"
+                max="5"
+                step="0.1"
+                value={visitReviewForm.rating}
+                onChange={(e) => setVisitReviewForm({ ...visitReviewForm, rating: clampRating(e.target.value) })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <p className="text-xs text-gray-400 mt-1">0.0 ~ 5.0 (0.1 단위)</p>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">내용 *</label>

@@ -134,7 +134,7 @@ export default function ArchivePage() {
                     <ChevronRight size={16} className="text-gray-300 group-hover:text-gray-500 mt-0.5" />
                   </div>
                   <div className="flex items-center gap-3 mt-3 text-xs text-gray-500">
-                    {p.averageRating && <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" />{p.averageRating}</span>}
+                    {p.averageRating != null && <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" />{p.averageRating.toFixed(1)}</span>}
                     <span>방문 {p.visitCount}회</span>
                     <span>후기 {p.reviewCount}건</span>
                   </div>
@@ -177,7 +177,7 @@ export default function ArchivePage() {
                       <p className="text-sm text-red-500 font-medium">취소 사유: {t.cancelReason}</p>
                     )}
                     <div className="flex items-center gap-3 text-xs text-gray-400">
-                      {t.averageRating && <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" />{t.averageRating}</span>}
+                      {t.averageRating != null && <span className="flex items-center gap-0.5"><Star size={12} className="text-yellow-500 fill-yellow-500" />{t.averageRating.toFixed(1)}</span>}
                       {!isCancelled && <span>후기 {t.reviewCount}건</span>}
                     </div>
                   </div>
