@@ -5,6 +5,7 @@ import useArchiveStore from '../stores/useArchiveStore'
 import useAuthStore from '../stores/useAuthStore'
 import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
+import ExternalLinkIcon from '../components/ExternalLinkIcon'
 import * as tripsApi from '../api/trips'
 import * as planItemsApi from '../api/planItems'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
@@ -310,6 +311,7 @@ export default function TripRecordDetailPage() {
                         {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
                         {item.menuItems && <span className="text-xs text-gray-500">{item.menuItems}</span>}
                         {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
+                        {item.externalLink && <ExternalLinkIcon url={item.externalLink} className="text-xs" />}
                       </div>
                       {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
                     </button>
@@ -322,7 +324,6 @@ export default function TripRecordDetailPage() {
                   </div>
                   {isExpanded && (
                     <div className="px-3 pb-3 border-t border-gray-50 bg-gray-50/50">
-                      {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#7466C5] hover:text-[#6556B1] hover:underline inline-block mt-2">외부 링크</a>}
                       <div className="flex items-center justify-between mt-2 mb-1.5">
                         <span className="text-xs font-semibold text-gray-600 flex items-center gap-1"><MessageSquare size={12} /> 후기</span>
                         {isCompleted && (

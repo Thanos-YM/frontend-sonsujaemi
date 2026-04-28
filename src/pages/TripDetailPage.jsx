@@ -9,6 +9,7 @@ import usePlanItemStore from '../stores/usePlanItemStore'
 import useAuthStore from '../stores/useAuthStore'
 import Modal from '../components/Modal'
 import UserBadge from '../components/UserBadge'
+import ExternalLinkIcon from '../components/ExternalLinkIcon'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 import { FOOD_CATEGORIES } from '../constants/foodCategories'
 import { searchKakaoPlaces } from '../api/places'
@@ -383,9 +384,9 @@ export default function TripDetailPage() {
                             {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
                             {item.menuItems && <span className="text-xs text-gray-500 break-words">{item.menuItems}</span>}
                             {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
+                            {item.externalLink && <ExternalLinkIcon url={item.externalLink} className="text-xs" />}
                           </div>
                           {item.note && <p className="text-xs text-gray-400 break-words">{item.note}</p>}
-                          {item.externalLink && <a href={item.externalLink} target="_blank" rel="noreferrer" className="text-xs text-[#F4928A] hover:underline break-all">링크</a>}
                         </div>
                         <div className="flex flex-wrap items-center gap-2 shrink-0 sm:justify-end sm:max-w-[min(100%,14rem)]">
                           {isUpcoming && item.status !== 'CANCELLED' && (
