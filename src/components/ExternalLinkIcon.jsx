@@ -24,7 +24,7 @@ const PROVIDER_META = [
   },
   {
     key: 'yeogi',
-    hosts: ['goodchoice.', 'hotelnow.'],
+    hosts: ['goodchoice.', 'hotelnow.', 'yeogi'],
     label: '여기어때',
     logoSrc: '/icons/providers/YEOGIEOTTAE-logo.png',
     logoClassName: 'h-4 w-4',
