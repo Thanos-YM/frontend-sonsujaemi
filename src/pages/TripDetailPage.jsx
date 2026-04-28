@@ -9,7 +9,6 @@ import usePlanItemStore from '../stores/usePlanItemStore'
 import useAuthStore from '../stores/useAuthStore'
 import Modal from '../components/Modal'
 import UserBadge from '../components/UserBadge'
-import ExternalLinkIcon from '../components/ExternalLinkIcon'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 import { FOOD_CATEGORIES } from '../constants/foodCategories'
 import { searchKakaoPlaces } from '../api/places'
@@ -20,6 +19,7 @@ const emptyItemForm = () => ({
   address: '',
   status: 'CANDIDATE',
   note: '',
+  reservationSite: '',
   externalLink: '',
   price: '',
   menuItems: '',
@@ -44,6 +44,8 @@ const ITEM_STATUS = {
   RESERVED: { label: '예약완료', color: 'bg-emerald-100 text-emerald-700' },
   CANCELLED: { label: '취소', color: 'bg-red-100 text-red-700' },
 }
+
+const RESERVATION_SITES = ['에어비엔비', '아고다', '야놀자', '여기어때', '네이버 지도']
 
 function SortableItem({ id, children }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
@@ -75,7 +77,7 @@ export default function TripDetailPage() {
   const [cancelReason, setCancelReason] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [editItem, setEditItem] = useState(null)
-  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
+  const [editItemForm, setEditItemForm] = useState({ note: '', reservationSite: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
 
   const [infoForm, setInfoForm] = useState({ title: '', region: '' })
   const [gatherForm, setGatherForm] = useState({ gatherPlace: '', gatherTime: '', gatherNote: '' })
@@ -162,6 +164,7 @@ export default function TripDetailPage() {
         address: itemForm.address.trim(),
         status: itemForm.status,
         note: itemForm.note || null,
+        reservationSite: itemForm.reservationSite || null,
         externalLink: itemForm.externalLink || null,
         price: parsePriceToNumber(itemForm.price),
         nights: itemForm.nights ? Number(itemForm.nights) : null,
@@ -190,6 +193,7 @@ export default function TripDetailPage() {
     setEditItem(item)
     setEditItemForm({
       note: item.note || '',
+      reservationSite: item.reservationSite || '',
       externalLink: item.externalLink || '',
       price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
@@ -204,6 +208,7 @@ export default function TripDetailPage() {
     try {
       const payload = {
         note: editItemForm.note || null,
+        reservationSite: editItemForm.reservationSite || null,
         externalLink: editItemForm.externalLink || null,
         price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
@@ -384,7 +389,21 @@ export default function TripDetailPage() {
                             {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
                             {item.menuItems && <span className="text-xs text-gray-500 break-words">{item.menuItems}</span>}
                             {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
-                            {item.externalLink && <ExternalLinkIcon url={item.externalLink} className="text-xs" />}
+                            {item.place.category === 'ACCOMMODATION' && item.reservationSite && (
+                              <span className="text-xs text-gray-500">{item.reservationSite}</span>
+                            )}
+                            {item.externalLink && (
+                              <a
+                                href={item.externalLink}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-xs text-[#7466C5] hover:text-[#6556B1]"
+                                title="외부 링크"
+                                aria-label="외부 링크"
+                              >
+                                🔗
+                              </a>
+                            )}
                           </div>
                           {item.note && <p className="text-xs text-gray-400 break-words">{item.note}</p>}
                         </div>
@@ -486,6 +505,7 @@ export default function TripDetailPage() {
                   setItemForm((prev) => ({
                     ...prev,
                     category: v,
+                    reservationSite: v === 'ACCOMMODATION' ? prev.reservationSite : '',
                     ...(prev.kakaoPlaceId
                       ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
                       : {}),
@@ -561,6 +581,19 @@ export default function TripDetailPage() {
               <input type="number" min="1" value={itemForm.nights} onChange={(e) => setItemForm({ ...itemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
             </div>
           )}
+          {itemForm.category === 'ACCOMMODATION' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">예약 사이트</label>
+              <select
+                value={itemForm.reservationSite}
+                onChange={(e) => setItemForm({ ...itemForm, reservationSite: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">선택 안 함</option>
+                {RESERVATION_SITES.map((site) => <option key={site} value={site}>{site}</option>)}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
             <input value={itemForm.note} onChange={(e) => setItemForm({ ...itemForm, note: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
@@ -611,6 +644,19 @@ export default function TripDetailPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">숙박 일수</label>
                 <input type="number" min="1" value={editItemForm.nights} onChange={(e) => setEditItemForm({ ...editItemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
+              </div>
+            )}
+            {editItem.place.category === 'ACCOMMODATION' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">예약 사이트</label>
+                <select
+                  value={editItemForm.reservationSite}
+                  onChange={(e) => setEditItemForm({ ...editItemForm, reservationSite: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">선택 안 함</option>
+                  {RESERVATION_SITES.map((site) => <option key={site} value={site}>{site}</option>)}
+                </select>
               </div>
             )}
             <div>

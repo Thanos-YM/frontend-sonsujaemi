@@ -5,12 +5,13 @@ import useArchiveStore from '../stores/useArchiveStore'
 import useAuthStore from '../stores/useAuthStore'
 import UserBadge from '../components/UserBadge'
 import Modal from '../components/Modal'
-import ExternalLinkIcon from '../components/ExternalLinkIcon'
 import * as tripsApi from '../api/trips'
 import * as planItemsApi from '../api/planItems'
 import { formatPriceInput, parsePriceToNumber } from '../utils/priceInput'
 import { FOOD_CATEGORIES } from '../constants/foodCategories'
 import { searchKakaoPlaces } from '../api/places'
+
+const RESERVATION_SITES = ['에어비엔비', '아고다', '야놀자', '여기어때', '네이버 지도']
 
 const emptyItemForm = () => ({
   placeName: '',
@@ -18,6 +19,7 @@ const emptyItemForm = () => ({
   address: '',
   status: 'CANDIDATE',
   note: '',
+  reservationSite: '',
   externalLink: '',
   price: '',
   menuItems: '',
@@ -44,7 +46,7 @@ export default function TripRecordDetailPage() {
   const [reviewForm, setReviewForm] = useState({ rating: 5.0, content: '' })
   const [myReview, setMyReview] = useState(null)
   const [editItem, setEditItem] = useState(null)
-  const [editItemForm, setEditItemForm] = useState({ note: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
+  const [editItemForm, setEditItemForm] = useState({ note: '', reservationSite: '', externalLink: '', price: '', menuItems: '', nights: '', foodCategory: '' })
   const [submitting, setSubmitting] = useState(false)
   const [expandedItemId, setExpandedItemId] = useState(null)
   const [itemReviews, setItemReviews] = useState({})
@@ -106,6 +108,7 @@ export default function TripRecordDetailPage() {
     setEditItem(item)
     setEditItemForm({
       note: item.note || '',
+      reservationSite: item.reservationSite || '',
       externalLink: item.externalLink || '',
       price: item.price != null ? formatPriceInput(String(item.price)) : '',
       menuItems: item.menuItems || '',
@@ -120,6 +123,7 @@ export default function TripRecordDetailPage() {
     try {
       await planItemsApi.updatePlanItem(tripId, editItem.id, {
         note: editItemForm.note || null,
+        reservationSite: editItemForm.reservationSite || null,
         externalLink: editItemForm.externalLink || null,
         price: parsePriceToNumber(editItemForm.price),
         menuItems: editItemForm.menuItems || null,
@@ -159,6 +163,7 @@ export default function TripRecordDetailPage() {
         address: itemForm.address.trim(),
         status: itemForm.status,
         note: itemForm.note || null,
+        reservationSite: itemForm.reservationSite || null,
         externalLink: itemForm.externalLink || null,
         price: parsePriceToNumber(itemForm.price),
         nights: itemForm.nights ? Number(itemForm.nights) : null,
@@ -311,7 +316,19 @@ export default function TripRecordDetailPage() {
                         {item.price != null && <span className="text-xs text-gray-500">{item.price.toLocaleString()}원</span>}
                         {item.menuItems && <span className="text-xs text-gray-500">{item.menuItems}</span>}
                         {item.nights != null && <span className="text-xs text-gray-500">{item.nights}박</span>}
-                        {item.externalLink && <ExternalLinkIcon url={item.externalLink} className="text-xs" />}
+                        {item.place.category === 'ACCOMMODATION' && item.reservationSite && <span className="text-xs text-gray-500">{item.reservationSite}</span>}
+                        {item.externalLink && (
+                          <a
+                            href={item.externalLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-xs text-[#7466C5] hover:text-[#6556B1]"
+                            title="외부 링크"
+                            aria-label="외부 링크"
+                          >
+                            🔗
+                          </a>
+                        )}
                       </div>
                       {item.note && <p className="text-xs text-gray-400">{item.note}</p>}
                     </button>
@@ -477,6 +494,19 @@ export default function TripRecordDetailPage() {
                 <input type="number" min="1" value={editItemForm.nights} onChange={(e) => setEditItemForm({ ...editItemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
               </div>
             )}
+            {editItem.place.category === 'ACCOMMODATION' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">예약 사이트</label>
+                <select
+                  value={editItemForm.reservationSite}
+                  onChange={(e) => setEditItemForm({ ...editItemForm, reservationSite: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                >
+                  <option value="">선택 안 함</option>
+                  {RESERVATION_SITES.map((site) => <option key={site} value={site}>{site}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">메모</label>
               <input value={editItemForm.note} onChange={(e) => setEditItemForm({ ...editItemForm, note: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" />
@@ -538,6 +568,7 @@ export default function TripRecordDetailPage() {
                   setItemForm((prev) => ({
                     ...prev,
                     category: v,
+                    reservationSite: v === 'ACCOMMODATION' ? prev.reservationSite : '',
                     ...(prev.kakaoPlaceId
                       ? { kakaoPlaceId: '', latitude: null, longitude: null, placeUrl: '' }
                       : {}),
@@ -611,6 +642,19 @@ export default function TripRecordDetailPage() {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">숙박 일수</label>
               <input type="number" min="1" value={itemForm.nights} onChange={(e) => setItemForm({ ...itemForm, nights: e.target.value })} className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm" placeholder="박" />
+            </div>
+          )}
+          {itemForm.category === 'ACCOMMODATION' && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">예약 사이트</label>
+              <select
+                value={itemForm.reservationSite}
+                onChange={(e) => setItemForm({ ...itemForm, reservationSite: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              >
+                <option value="">선택 안 함</option>
+                {RESERVATION_SITES.map((site) => <option key={site} value={site}>{site}</option>)}
+              </select>
             </div>
           )}
           <div>
